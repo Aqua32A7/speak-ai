@@ -1,0 +1,100 @@
+import React from 'react';
+import { Mic, Moon, Sun, Activity, Sparkles } from 'lucide-react';
+
+export default function Navbar({ currentView, setCurrentView, theme, toggleTheme, health }) {
+  return (
+    <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        
+        {/* Brand */}
+        <div 
+          onClick={() => setCurrentView('home')}
+          className="flex items-center gap-2.5 cursor-pointer group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-200">
+            <Mic className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200">
+                SpeakPrep
+              </span>
+              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
+                AI
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
+              60s Interview Communication
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation links */}
+        <nav className="flex items-center gap-1 sm:gap-2">
+          <button
+            onClick={() => setCurrentView('home')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              currentView === 'home'
+                ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-semibold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            Home
+          </button>
+          
+          <button
+            onClick={() => setCurrentView('setup')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              currentView === 'setup' || currentView === 'practice' || currentView === 'feedback'
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+            Practice Drill
+          </button>
+
+          <button
+            onClick={() => setCurrentView('progress')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              currentView === 'progress'
+                ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-semibold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            Progress
+          </button>
+        </nav>
+
+        {/* Controls: Health + Theme */}
+        <div className="flex items-center gap-3">
+          {/* Health indicator */}
+          <div className="hidden md:flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                health?.status === 'healthy' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+              }`}
+            />
+            <span className="text-[11px] font-mono">
+              {health?.gemini_configured ? health?.model : 'API Ready'}
+            </span>
+          </div>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-slate-700" />
+            )}
+          </button>
+        </div>
+
+      </div>
+    </header>
+  );
+}
