@@ -1,8 +1,10 @@
-import { Mic, Moon, Sun, Activity, Sparkles, Code2 } from 'lucide-react';
+import { Mic, Moon, Sun, Activity, Sparkles, Code2, BookOpen, Compass } from 'lucide-react';
 
-export default function Navbar({ currentView, setCurrentView, theme, toggleTheme, health, isDsaMode }) {
-  const isPracticeActive = currentView === 'setup' || (currentView === 'practice' && !isDsaMode) || (currentView === 'feedback' && !isDsaMode);
+export default function Navbar({ currentView, setCurrentView, theme, toggleTheme, health, isDsaMode, isCoreMode }) {
+  const isPracticeActive = currentView === 'setup' || (currentView === 'practice' && !isDsaMode && !isCoreMode) || (currentView === 'feedback' && !isDsaMode && !isCoreMode);
   const isDsaActive = currentView === 'dsa_setup' || currentView === 'dsa_practice' || (currentView === 'practice' && isDsaMode) || currentView === 'dsa_feedback' || (currentView === 'feedback' && isDsaMode);
+  const isCoreActive = currentView === 'core_setup' || currentView === 'core_practice' || (currentView === 'practice' && isCoreMode) || currentView === 'core_feedback' || (currentView === 'feedback' && isCoreMode);
+  const isJourneyActive = currentView === 'dsa_journey';
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
@@ -47,13 +49,14 @@ export default function Navbar({ currentView, setCurrentView, theme, toggleTheme
           <button
             onClick={() => setCurrentView('setup')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              isPracticeActive && !isDsaActive
+              isPracticeActive && !isDsaActive && !isCoreActive
                 ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold'
                 : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-            <span>Practice Drill</span>
+            <span className="hidden md:inline">Practice</span>
+            <span className="md:hidden">Drill</span>
           </button>
 
           <button
@@ -65,7 +68,33 @@ export default function Navbar({ currentView, setCurrentView, theme, toggleTheme
             }`}
           >
             <Code2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>DSA Interview</span>
+            <span>DSA</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('core_setup')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              isCoreActive
+                ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 font-semibold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5 text-purple-500" />
+            <span className="hidden sm:inline">CS Core</span>
+            <span className="sm:hidden">Core</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('dsa_journey')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              isJourneyActive
+                ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 font-semibold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            <Compass className="w-3.5 h-3.5 text-sky-500" />
+            <span className="hidden sm:inline">DSA Journey</span>
+            <span className="sm:hidden">Journey</span>
           </button>
 
           <button

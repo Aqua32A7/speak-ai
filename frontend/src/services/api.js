@@ -99,6 +99,7 @@ export async function fetchFollowUp(topic, transcript) {
 
 /**
  * Generate a dynamic verbal DSA interview question with hidden key points
+ * Optionally conditioned on user's DSA Journey stats
  */
 export async function fetchDsaQuestion({
   difficulty = 'Medium',
@@ -106,6 +107,7 @@ export async function fetchDsaQuestion({
   typeFilter = 'Surprise Me',
   recentQuestions = [],
   recentSubtopics = [],
+  journeyContext = null,
 }) {
   const response = await fetch(`${API_BASE_URL}/api/dsa/question`, {
     method: 'POST',
@@ -116,7 +118,48 @@ export async function fetchDsaQuestion({
       type_filter: typeFilter,
       recent_questions: recentQuestions,
       recent_subtopics: recentSubtopics,
+      journey_context: journeyContext,
     }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Fetch verified public statistics from a coding platform (LeetCode, Codeforces)
+ */
+export async function fetchDsaProfile({ platform, handleOrUrl, forceRefresh = false }) {
+  const response = await fetch(`${API_BASE_URL}/api/dsa/profile/fetch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      platform,
+      handle_or_url: handleOrUrl,
+      force_refresh: forceRefresh,
+    }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Deterministically compute aggregate math across all candidate coding platforms
+ */
+export async function calculateDsaJourney(platforms) {
+  const response = await fetch(`${API_BASE_URL}/api/dsa/profile/calculate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(platforms),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Request Gemini qualitative mentorship insights on the calculated DSA Journey
+ */
+export async function analyzeDsaJourney(calculation) {
+  const response = await fetch(`${API_BASE_URL}/api/dsa/profile/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ calculation }),
   });
   return handleResponse(response);
 }
@@ -158,6 +201,82 @@ export async function analyzeDsaAnswer({
  */
 export async function fetchDsaFollowUp({ question, transcript, chainCount = 1 }) {
   const response = await fetch(`${API_BASE_URL}/api/dsa/followup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      question,
+      transcript,
+      chain_count: chainCount,
+    }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Generate a dynamic CS core fundamentals question (optional 'teach' primer)
+ */
+export async function fetchCoreQuestion({
+  subject = 'Operating Systems',
+  difficulty = 'Medium',
+  mode = 'test',
+  recentQuestions = [],
+  weakTopics = [],
+}) {
+  const response = await fetch(`${API_BASE_URL}/api/core/question`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      subject,
+      difficulty,
+      mode,
+      recent_questions: recentQuestions,
+      weak_topics: weakTopics,
+    }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Analyze spoken CS core response against 4-part structure, depth, and misconceptions
+ */
+export async function analyzeCoreAnswer({
+  question,
+  transcript,
+  keyPoints = [],
+  durationSeconds,
+  timeToFirstWord = 0.0,
+  longestPause = 0.0,
+  pausesOver2s = 0,
+  parentSessionId = null,
+  followUpChainCount = 0,
+  subject = '',
+  subtopic = '',
+}) {
+  const response = await fetch(`${API_BASE_URL}/api/core/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      question,
+      transcript,
+      key_points: keyPoints,
+      duration_seconds: durationSeconds,
+      time_to_first_word_seconds: timeToFirstWord,
+      longest_pause_seconds: longestPause,
+      pauses_over_2s_count: pausesOver2s,
+      parent_session_id: parentSessionId,
+      follow_up_chain_count: followUpChainCount,
+      subject,
+      subtopic,
+    }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Generate deeper contextual CS core follow-up question
+ */
+export async function fetchCoreFollowUp({ question, transcript, chainCount = 1 }) {
+  const response = await fetch(`${API_BASE_URL}/api/core/followup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

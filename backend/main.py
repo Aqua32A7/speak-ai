@@ -12,20 +12,35 @@ load_dotenv(dotenv_path=env_path)
 
 from models.schemas import (
     AnalyzeRequest,
+    CoreAnalyzeRequest,
+    CoreFollowUpRequest,
+    CoreFollowUpResponse,
+    CoreQuestionRequest,
+    CoreQuestionResponse,
+    CoreSpeechAnalysisResponse,
     DsaAnalyzeRequest,
     DsaFollowUpRequest,
     DsaFollowUpResponse,
+    DsaJourneyAnalyzeRequest,
+    DsaJourneyCalculation,
+    DsaJourneyResponse,
     DsaQuestionRequest,
     DsaQuestionResponse,
     DsaSpeechAnalysisResponse,
     FollowUpRequest,
     FollowUpResponse,
     HealthResponse,
+    NormalizedPlatformStats,
+    ProfileFetchRequest,
     SpeechAnalysisResponse,
     TopicRequest,
     TopicResponse,
 )
 from services.gemini_service import gemini_service
+from services.platform_fetcher import (
+    calculate_dsa_journey,
+    fetch_platform_profile,
+)
 
 # Configure logger
 logging.basicConfig(
@@ -134,6 +149,7 @@ async def generate_dsa_question_endpoint(req: DsaQuestionRequest):
         type_filter=req.type_filter,
         recent_questions=req.recent_questions,
         recent_subtopics=req.recent_subtopics,
+        journey_context=req.journey_context,
     )
 
 
@@ -163,6 +179,94 @@ async def generate_dsa_followup_endpoint(req: DsaFollowUpRequest):
         chain_count=req.chain_count,
     )
     return DsaFollowUpResponse(follow_up_question=follow_up_q)
+
+
+# ============================================================================
+# DSA Profile & Journey Endpoints
+# ============================================================================
+
+@app.post("/api/dsa/profile/fetch", response_model=NormalizedPlatformStats)
+async def fetch_dsa_profile_endpoint(req: ProfileFetchRequest, request: Request):
+    """
+    Fetches public stats from LeetCode or Codeforces with SSRF protection,
+    rate limiting, and in-memory caching.
+    """
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    return await fetch_platform_profile(
+        platform=req.platform,
+        handle_or_url=req.handle_or_url,
+        client_ip=client_ip,
+        force_refresh=req.force_refresh,
+    )
+
+
+@app.post("/api/dsa/profile/calculate", response_model=DsaJourneyCalculation)
+async def calculate_dsa_journey_endpoint(platforms: list[NormalizedPlatformStats]):
+    """
+    Computes deterministic aggregate math (totals, difficulty splits, 14-topic coverage)
+    across all attached platforms (auto-fetched or self-reported).
+    """
+    return calculate_dsa_journey(platforms)
+
+
+@app.post("/api/dsa/profile/analyze", response_model=DsaJourneyResponse)
+async def analyze_dsa_journey_endpoint(req: DsaJourneyAnalyzeRequest):
+    """
+    Provides Gemini mentorship insights (readiness assessment, strengths, gaps,
+    recommended focus topics, interviewer perspective) based on pre-calculated metrics.
+    """
+    analysis = await gemini_service.analyze_dsa_journey(req.calculation)
+    return DsaJourneyResponse(calculation=req.calculation, analysis=analysis)
+
+
+# ============================================================================
+# CS Core Fundamentals Endpoints
+# ============================================================================
+
+@app.post("/api/core/question", response_model=CoreQuestionResponse)
+async def generate_core_question_endpoint(req: CoreQuestionRequest):
+    """
+    Generates a spoken-only conceptual CS interview question.
+    In 'teach' mode, provides a beginner-friendly 150-200 word primer before the question.
+    """
+    return await gemini_service.generate_core_question(
+        subject=req.subject,
+        difficulty=req.difficulty,
+        mode=req.mode,
+        recent_questions=req.recent_questions,
+        weak_topics=req.weak_topics,
+        user_profile=req.user_profile,
+    )
+
+
+@app.post("/api/core/analyze", response_model=CoreSpeechAnalysisResponse)
+async def analyze_core_endpoint(req: CoreAnalyzeRequest):
+    """
+    Evaluates spoken explanation of CS fundamental concept.
+    Assesses 4-part structure, depth, concrete examples, and builds a Concept Refresher.
+    """
+    return await gemini_service.analyze_core_answer(
+        question=req.question,
+        transcript=req.transcript,
+        key_points=req.key_points,
+        duration_seconds=req.duration_seconds,
+        time_to_first_word=req.time_to_first_word_seconds,
+        longest_pause=req.longest_pause_seconds,
+        pauses_over_2s=req.pauses_over_2s_count,
+        subject=req.subject,
+        subtopic=req.subtopic,
+    )
+
+
+@app.post("/api/core/followup", response_model=CoreFollowUpResponse)
+async def generate_core_followup_endpoint(req: CoreFollowUpRequest):
+    """Generates a deeper contextual interview follow-up on core CS concepts."""
+    follow_up_q = await gemini_service.generate_core_followup(
+        question=req.question,
+        transcript=req.transcript,
+        chain_count=req.chain_count,
+    )
+    return CoreFollowUpResponse(follow_up_question=follow_up_q)
 
 
 if __name__ == "__main__":

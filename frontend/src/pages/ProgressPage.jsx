@@ -17,20 +17,24 @@ import {
   Terminal,
   AlertTriangle,
   Flame,
+  BookOpen,
 } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import ScoreBar from '../components/ScoreBar';
+import { CORE_SUBJECTS } from '../services/storage';
 
 export default function ProgressPage({
   stats,
   readiness,
   sessions = [],
   dsaStats,
+  coreStats,
   onStartPractice,
   onStartDsaPractice,
+  onStartCorePractice,
 }) {
   const [expandedSessionId, setExpandedSessionId] = useState(null);
-  const [historyFilter, setHistoryFilter] = useState('all'); // 'all' | 'general' | 'dsa'
+  const [historyFilter, setHistoryFilter] = useState('all'); // 'all' | 'general' | 'dsa' | 'core'
 
   const toggleExpand = (id) => {
     setExpandedSessionId((prev) => (prev === id ? null : id));
@@ -44,13 +48,17 @@ export default function ProgressPage({
   };
 
   const filteredSessions = sessions.filter((s) => {
-    if (historyFilter === 'general') return s.mode !== 'dsa';
+    if (historyFilter === 'general') return s.mode !== 'dsa' && s.mode !== 'core';
     if (historyFilter === 'dsa') return s.mode === 'dsa';
+    if (historyFilter === 'core') return s.mode === 'core';
     return true;
   });
 
   const totalDsa = dsaStats?.total_dsa || 0;
   const weakestSubtopics = dsaStats?.weakest_subtopics || [];
+
+  const totalCore = coreStats?.total_core || 0;
+  const weakestCoreSubtopics = coreStats?.weakest_subtopics || [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-10 animate-in fade-in duration-200">
@@ -81,6 +89,14 @@ export default function ProgressPage({
           >
             <Terminal className="w-3.5 h-3.5" />
             <span>DSA Drill</span>
+          </button>
+
+          <button
+            onClick={onStartCorePractice}
+            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>CS Core Drill</span>
           </button>
         </div>
       </div>
@@ -299,6 +315,160 @@ export default function ProgressPage({
         )}
       </div>
 
+      {/* CS Fundamentals Mastery Section */}
+      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+              <BookOpen className="w-4 h-4" />
+              <span>CS Core Fundamentals Mastery</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
+              Spoken Computer Science Concepts
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-medium">Core Drills:</span>
+            <span className="text-xl font-bold font-mono text-purple-600 dark:text-purple-400">
+              {totalCore}
+            </span>
+          </div>
+        </div>
+
+        {totalCore > 0 ? (
+          <div className="space-y-6">
+            {/* 3 Mini Dimension Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                  Concept Accuracy
+                </span>
+                <span className="text-xl font-extrabold font-mono text-purple-600 dark:text-purple-400">
+                  {coreStats.avg_concept_accuracy}/10
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                  4-Part Structure
+                </span>
+                <span className="text-xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400">
+                  {coreStats.avg_structure_score}/10
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                  Technical Depth
+                </span>
+                <span className="text-xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                  {coreStats.avg_depth_score}/10
+                </span>
+              </div>
+            </div>
+
+            {/* Recommended Next Subject Banner */}
+            {coreStats?.recommended_next_subject && (
+              <div className="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[11px] uppercase tracking-wider font-bold text-purple-600 dark:text-purple-400 block">
+                      Recommended Next Subject
+                    </span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                      {coreStats.recommended_next_subject}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={onStartCorePractice}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-xs transition-colors self-start sm:self-auto cursor-pointer"
+                >
+                  Practice {coreStats.recommended_next_subject}
+                </button>
+              </div>
+            )}
+
+            {/* Weakest Subtopics Alert Banner */}
+            {weakestCoreSubtopics.length > 0 && (
+              <div className="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <div className="space-y-1 text-xs">
+                  <div className="font-bold text-amber-900 dark:text-amber-200">
+                    CS Core Improvement Areas
+                  </div>
+                  <p className="text-amber-800 dark:text-amber-300 leading-relaxed">
+                    Concepts with lower accuracy:{' '}
+                    <strong className="underline">
+                      {weakestCoreSubtopics.map((w) => `${w.subtopic} (${w.avg_accuracy}/10)`).join(', ')}
+                    </strong>
+                    . Focus on defining mechanisms clearly and stating trade-offs.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Subject Mastery Breakdown Grid */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                10 Core Subjects Mastery Matrix
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {CORE_SUBJECTS.map((subj) => {
+                  const mastery = coreStats?.subject_mastery?.[subj];
+                  const hasPracticed = Boolean(mastery && mastery.count > 0);
+                  const accuracy = hasPracticed ? mastery.avg_accuracy : 0;
+                  const count = hasPracticed ? mastery.count : 0;
+
+                  return (
+                    <div
+                      key={subj}
+                      className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate pr-2">
+                          {subj}
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-400 shrink-0">
+                          {hasPracticed ? `${count} ${count === 1 ? 'drill' : 'drills'}` : 'Not practiced'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              hasPracticed ? 'bg-purple-600 dark:bg-purple-500' : 'bg-transparent'
+                            }`}
+                            style={{ width: `${(accuracy / 10) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold font-mono text-slate-700 dark:text-slate-300 w-10 text-right">
+                          {hasPracticed ? `${accuracy}/10` : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-slate-400 space-y-3">
+            <p className="text-sm">No CS Core Fundamentals drills completed yet.</p>
+            <button
+              onClick={onStartCorePractice}
+              className="px-4 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-xs font-semibold hover:bg-purple-100 transition-colors cursor-pointer"
+            >
+              Start your first CS Fundamentals drill
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Category Breakdown (General Drills) */}
       {Object.keys(stats.category_breakdown || {}).length > 0 && (
         <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-4">
@@ -356,7 +526,7 @@ export default function ProgressPage({
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              General ({sessions.filter((s) => s.mode !== 'dsa').length})
+              General ({sessions.filter((s) => s.mode !== 'dsa' && s.mode !== 'core').length})
             </button>
             <button
               onClick={() => setHistoryFilter('dsa')}
@@ -368,6 +538,16 @@ export default function ProgressPage({
             >
               DSA Interview ({sessions.filter((s) => s.mode === 'dsa').length})
             </button>
+            <button
+              onClick={() => setHistoryFilter('core')}
+              className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+                historyFilter === 'core'
+                  ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              CS Fundamentals ({sessions.filter((s) => s.mode === 'core').length})
+            </button>
           </div>
         </div>
 
@@ -375,7 +555,13 @@ export default function ProgressPage({
           <div className="text-center py-12 text-slate-400 space-y-3">
             <p className="text-sm font-medium">No speaking drills recorded for this filter.</p>
             <button
-              onClick={historyFilter === 'dsa' ? onStartDsaPractice : onStartPractice}
+              onClick={
+                historyFilter === 'core'
+                  ? onStartCorePractice
+                  : historyFilter === 'dsa'
+                  ? onStartDsaPractice
+                  : onStartPractice
+              }
               className="px-4 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-indigo-100 transition-colors cursor-pointer"
             >
               Start a new drill
@@ -386,6 +572,7 @@ export default function ProgressPage({
             {filteredSessions.map((s) => {
               const isExpanded = expandedSessionId === s.id;
               const isDsa = s.mode === 'dsa';
+              const isCore = s.mode === 'core';
               const dateStr = new Date(s.timestamp).toLocaleDateString(undefined, {
                 month: 'short',
                 day: 'numeric',
@@ -405,7 +592,11 @@ export default function ProgressPage({
                   >
                     <div className="space-y-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        {isDsa ? (
+                        {isCore ? (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+                            CS Core: {s.subject || 'Fundamentals'}
+                          </span>
+                        ) : isDsa ? (
                           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
                             DSA: {s.subtopic || 'General'}
                           </span>
@@ -431,7 +622,9 @@ export default function ProgressPage({
                       <div className="text-right">
                         <span
                           className={`text-lg font-extrabold font-mono ${
-                            isDsa
+                            isCore
+                              ? 'text-purple-600 dark:text-purple-400'
+                              : isDsa
                               ? 'text-emerald-600 dark:text-emerald-400'
                               : 'text-indigo-600 dark:text-indigo-400'
                           }`}
@@ -452,6 +645,72 @@ export default function ProgressPage({
                   {/* Expanded Details */}
                   {isExpanded && (
                     <div className="p-4 sm:p-6 border-t border-slate-200/50 dark:border-slate-800/60 bg-white dark:bg-slate-900/60 space-y-4 text-xs sm:text-sm animate-in fade-in duration-150">
+                      {isCore && (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                            <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+                              <span className="text-slate-400 block text-[10px]">Concept Accuracy</span>
+                              <span className="font-bold text-purple-600 dark:text-purple-400">
+                                {s.concept_accuracy || 0}/10
+                              </span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+                              <span className="text-slate-400 block text-[10px]">4-Part Structure</span>
+                              <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                                {s.structure || 0}/10
+                              </span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+                              <span className="text-slate-400 block text-[10px]">Technical Depth</span>
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                                {s.depth || 0}/10
+                              </span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+                              <span className="text-slate-400 block text-[10px]">Delivery & Clarity</span>
+                              <span className="font-bold text-amber-600 dark:text-amber-400">
+                                {s.clarity || 0}/10
+                              </span>
+                            </div>
+                          </div>
+
+                          {s.four_part_structure && (
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-2">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                                4-Part Structure Covered
+                              </span>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                                <span className={`inline-flex items-center gap-1 ${s.four_part_structure.definition_covered ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400 line-through'}`}>
+                                  {s.four_part_structure.definition_covered ? '✓' : '✗'} 1. Definition
+                                </span>
+                                <span className={`inline-flex items-center gap-1 ${s.four_part_structure.mechanism_covered ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400 line-through'}`}>
+                                  {s.four_part_structure.mechanism_covered ? '✓' : '✗'} 2. Mechanism
+                                </span>
+                                <span className={`inline-flex items-center gap-1 ${s.four_part_structure.example_covered ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400 line-through'}`}>
+                                  {s.four_part_structure.example_covered ? '✓' : '✗'} 3. Example
+                                </span>
+                                <span className={`inline-flex items-center gap-1 ${s.four_part_structure.tradeoff_covered ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400 line-through'}`}>
+                                  {s.four_part_structure.tradeoff_covered ? '✓' : '✗'} 4. Trade-off
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {s.gentle_misconceptions && s.gentle_misconceptions.length > 0 && (
+                            <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-xs">
+                              <span className="font-bold text-amber-900 dark:text-amber-200 block mb-1">
+                                Misconceptions Corrected:
+                              </span>
+                              <ul className="list-disc list-inside space-y-0.5 text-amber-800 dark:text-amber-300">
+                                {s.gentle_misconceptions.map((m, idx) => (
+                                  <li key={idx}>{m}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {isDsa && (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                           <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
@@ -511,6 +770,24 @@ export default function ProgressPage({
                           <p className="p-3 rounded-xl bg-indigo-50/30 dark:bg-indigo-950/20 text-slate-700 dark:text-slate-300 leading-relaxed">
                             {s.sample_answer}
                           </p>
+                        </div>
+                      )}
+
+                      {s.refresher?.quick_explanation && (
+                        <div>
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 block mb-1">
+                            Concept Refresher
+                          </span>
+                          <div className="p-3 rounded-xl bg-purple-50/30 dark:bg-purple-950/20 text-slate-700 dark:text-slate-300 space-y-2">
+                            <p className="leading-relaxed">{s.refresher.quick_explanation}</p>
+                            {s.refresher.key_takeaways?.length > 0 && (
+                              <ul className="list-disc list-inside space-y-0.5 text-xs text-purple-700 dark:text-purple-300">
+                                {s.refresher.key_takeaways.map((k, idx) => (
+                                  <li key={idx}>{k}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

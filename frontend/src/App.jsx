@@ -3,9 +3,12 @@ import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import SetupPage from './pages/SetupPage';
 import DsaSetupPage from './pages/DsaSetupPage';
+import CoreSetupPage from './pages/CoreSetupPage';
 import PracticePage from './pages/PracticePage';
 import FeedbackPage from './pages/FeedbackPage';
 import DsaFeedbackPage from './pages/DsaFeedbackPage';
+import CoreFeedbackPage from './pages/CoreFeedbackPage';
+import DsaJourneyPage from './pages/DsaJourneyPage';
 import ProgressPage from './pages/ProgressPage';
 
 import {
@@ -16,22 +19,28 @@ import {
   fetchDsaQuestion,
   analyzeDsaAnswer,
   fetchDsaFollowUp,
+  fetchCoreQuestion,
+  analyzeCoreAnswer,
+  fetchCoreFollowUp,
 } from './services/api';
 import {
   getSessions,
   saveSession,
   getRecentTopics,
   getRecentDsaQuestions,
+  getRecentCoreQuestions,
   getStats,
   getDsaStats,
+  getCoreStats,
   getInterviewReadiness,
+  getDsaJourneyBrief,
   getStoredTheme,
   setStoredTheme,
 } from './services/storage';
 import { useSpeechRecognition } from './services/useSpeechRecognition';
 
 export default function App() {
-  // Navigation: 'home' | 'setup' | 'practice' | 'feedback' | 'progress' | 'dsa_setup' | 'dsa_practice' | 'dsa_feedback'
+  // Navigation: 'home' | 'setup' | 'practice' | 'feedback' | 'progress' | 'dsa_setup' | 'dsa_practice' | 'dsa_feedback' | 'core_setup' | 'core_practice' | 'core_feedback' | 'dsa_journey'
   const [currentView, setCurrentView] = useState('home');
 
   // Theme
@@ -54,6 +63,7 @@ export default function App() {
   // Storage state
   const [stats, setStats] = useState(getStats);
   const [dsaStats, setDsaStats] = useState(getDsaStats);
+  const [coreStats, setCoreStats] = useState(getCoreStats);
   const [readiness, setReadiness] = useState(getInterviewReadiness);
   const [sessions, setSessions] = useState(getSessions);
 
@@ -88,6 +98,7 @@ export default function App() {
   const refreshStorageData = useCallback(() => {
     setStats(getStats());
     setDsaStats(getDsaStats());
+    setCoreStats(getCoreStats());
     setReadiness(getInterviewReadiness());
     setSessions(getSessions());
   }, []);
@@ -118,7 +129,7 @@ export default function App() {
   };
 
   // Generate DSA interview question from Gemini
-  const handleGenerateDsaQuestion = async ({ subtopic, questionType, difficulty }) => {
+  const handleGenerateDsaQuestion = async ({ subtopic, questionType, difficulty, journeyContext = null }) => {
     setIsGeneratingTopic(true);
     setTopicError(null);
     try {
@@ -128,6 +139,7 @@ export default function App() {
         subtopicFilter: subtopic,
         typeFilter: questionType,
         recentQuestions,
+        journeyContext,
       });
 
       setActiveTopic({
@@ -151,7 +163,69 @@ export default function App() {
     }
   };
 
-  // Submit drill to Gemini for analysis (General or DSA)
+  // Launch DSA Drill targeting a specific topic from DSA Journey page
+  const handleStartDsaWithTopic = (topic) => {
+    handleGenerateDsaQuestion({
+      subtopic: topic,
+      questionType: 'Explain an Approach',
+      difficulty: 'Medium',
+      journeyContext: getDsaJourneyBrief(),
+    });
+  };
+
+  // Launch DSA Drill targeting an actual recently solved problem from DSA Journey page
+  const handleStartDsaWithProblem = (problemTitle) => {
+    const brief = getDsaJourneyBrief() || {};
+    handleGenerateDsaQuestion({
+      subtopic: 'Surprise Me',
+      questionType: 'Explain an Approach',
+      difficulty: 'Medium',
+      journeyContext: {
+        ...brief,
+        recent_problems: [problemTitle, ...(brief.recent_problems || [])],
+      },
+    });
+  };
+
+  // Generate CS Core Fundamentals question from Gemini
+  const handleGenerateCoreQuestion = async ({ subject, style, difficulty, setupMode }) => {
+    setIsGeneratingTopic(true);
+    setTopicError(null);
+    try {
+      const recentQuestions = getRecentCoreQuestions(15);
+      const data = await fetchCoreQuestion({
+        subject,
+        style,
+        difficulty,
+        setupMode,
+        recentQuestions,
+      });
+
+      setActiveTopic({
+        topic: data.question,
+        subject: data.subject,
+        subtopic: data.subject,
+        style: data.style,
+        difficulty: data.difficulty,
+        setup_mode: data.setup_mode,
+        primer: data.primer,
+        primer_analogy: data.primer_analogy,
+        key_aspects: data.key_aspects || [],
+        follow_up_question: data.follow_up_question,
+        mode: 'core',
+        parentSessionId: null,
+        roundNumber: 1,
+      });
+      setCurrentView('core_practice');
+    } catch (err) {
+      console.error('Error generating CS Core question:', err);
+      setTopicError(err.message || 'Failed to generate CS Fundamentals question from Gemini.');
+    } finally {
+      setIsGeneratingTopic(false);
+    }
+  };
+
+  // Submit drill to Gemini for analysis (General, DSA, or CS Core)
   const handleFinishDrill = async ({
     topic,
     transcript,
@@ -163,15 +237,73 @@ export default function App() {
     keyPoints = [],
     subtopic,
     questionType,
+    subject,
     mode = 'general',
   }) => {
     setIsLoadingAnalysis(true);
     setAnalysisError(null);
 
+    const isCore = mode === 'core' || activeTopic?.mode === 'core';
     const isDsa = mode === 'dsa' || activeTopic?.mode === 'dsa';
 
     try {
-      if (isDsa) {
+      if (isCore) {
+        // CS Core Fundamentals Analysis
+        const analysisData = await analyzeCoreAnswer({
+          question: topic,
+          subject: subject || activeTopic?.subject || 'Operating Systems',
+          transcript,
+          durationSeconds,
+          timeToFirstWord,
+          longestPause,
+          pausesOver2s,
+          parentSessionId,
+        });
+
+        const saved = saveSession({
+          mode: 'core',
+          topic,
+          subject: subject || activeTopic?.subject || 'Operating Systems',
+          subtopic: subtopic || activeTopic?.subtopic || activeTopic?.subject || 'Operating Systems',
+          style: activeTopic?.style || 'Standard Technical Definition',
+          difficulty: activeTopic?.difficulty || 'Medium',
+          setup_mode: activeTopic?.setup_mode || 'test',
+          primer: activeTopic?.primer,
+          primer_analogy: activeTopic?.primer_analogy,
+          key_aspects: activeTopic?.key_aspects || [],
+          transcript,
+          duration_seconds: durationSeconds,
+          ...analysisData,
+          parent_session_id: parentSessionId,
+        });
+
+        // Optionally fetch dynamic contextual follow-up
+        let nextFollowUp = activeTopic?.follow_up_question || null;
+        try {
+          const followUpRes = await fetchCoreFollowUp({
+            question: topic,
+            subject: subject || activeTopic?.subject || 'Operating Systems',
+            transcript,
+          });
+          if (followUpRes?.follow_up_question) {
+            nextFollowUp = followUpRes.follow_up_question;
+          }
+        } catch (fErr) {
+          console.warn('Could not generate dynamic Core follow-up, keeping existing:', fErr);
+        }
+
+        setActiveTopic((prev) => ({
+          ...prev,
+          follow_up_question: nextFollowUp,
+        }));
+
+        refreshStorageData();
+        setCurrentAnalysis({
+          ...analysisData,
+          sessionId: saved?.id,
+        });
+        setCurrentView('core_feedback');
+      } else if (isDsa) {
         // DSA Analysis
         const analysisData = await analyzeDsaAnswer({
           question: topic,
@@ -300,10 +432,33 @@ export default function App() {
     setCurrentView('dsa_practice');
   };
 
+  // Start follow-up round for CS Core Fundamentals
+  const handleStartCoreFollowUp = (followUpQuestion) => {
+    setActiveTopic({
+      topic: followUpQuestion,
+      subject: activeTopic?.subject || 'Operating Systems',
+      subtopic: activeTopic?.subtopic || activeTopic?.subject || 'Operating Systems',
+      style: 'Trade-off & Deep Dive',
+      difficulty: activeTopic?.difficulty || 'Medium',
+      setup_mode: 'test',
+      primer: null,
+      primer_analogy: null,
+      key_aspects: [],
+      follow_up_question: null,
+      parentSessionId: currentAnalysis?.sessionId || null,
+      mode: 'core',
+      roundNumber: (activeTopic?.roundNumber || 1) + 1,
+    });
+    setCurrentAnalysis(null);
+    setCurrentView('core_practice');
+  };
+
   // Try again with identical topic / question
   const handleTryAgain = () => {
     setCurrentAnalysis(null);
-    if (activeTopic?.mode === 'dsa') {
+    if (activeTopic?.mode === 'core') {
+      setCurrentView('core_practice');
+    } else if (activeTopic?.mode === 'dsa') {
       setCurrentView('dsa_practice');
     } else {
       setCurrentView('practice');
@@ -325,11 +480,24 @@ export default function App() {
     setCurrentView('dsa_setup');
   };
 
+  // New Core question flow
+  const handleNewCoreQuestion = () => {
+    setActiveTopic(null);
+    setCurrentAnalysis(null);
+    setCurrentView('core_setup');
+  };
+
   const isCurrentDsa =
     currentView === 'dsa_setup' ||
     currentView === 'dsa_practice' ||
     currentView === 'dsa_feedback' ||
     activeTopic?.mode === 'dsa';
+
+  const isCurrentCore =
+    currentView === 'core_setup' ||
+    currentView === 'core_practice' ||
+    currentView === 'core_feedback' ||
+    activeTopic?.mode === 'core';
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
@@ -341,6 +509,7 @@ export default function App() {
         toggleTheme={toggleTheme}
         health={health}
         isDsaMode={isCurrentDsa}
+        isCoreMode={isCurrentCore}
       />
 
       {/* Main Content Area */}
@@ -350,6 +519,8 @@ export default function App() {
             stats={stats}
             onStartPractice={() => setCurrentView('setup')}
             onStartDsaPractice={() => setCurrentView('dsa_setup')}
+            onStartCorePractice={() => setCurrentView('core_setup')}
+            onViewJourney={() => setCurrentView('dsa_journey')}
             onViewProgress={() => setCurrentView('progress')}
           />
         )}
@@ -374,8 +545,18 @@ export default function App() {
           />
         )}
 
-        {/* Practice Arena (Used for both General and DSA drills) */}
-        {(currentView === 'practice' || currentView === 'dsa_practice') && (
+        {/* CS Core Fundamentals Setup */}
+        {currentView === 'core_setup' && (
+          <CoreSetupPage
+            onGenerateQuestion={handleGenerateCoreQuestion}
+            isLoading={isGeneratingTopic}
+            error={topicError}
+            onClearError={() => setTopicError(null)}
+          />
+        )}
+
+        {/* Practice Arena (Used for General, DSA, and CS Core drills) */}
+        {(currentView === 'practice' || currentView === 'dsa_practice' || currentView === 'core_practice') && (
           <PracticePage
             topicData={activeTopic}
             speechRecognition={speechRecognition}
@@ -383,7 +564,11 @@ export default function App() {
             isLoadingAnalysis={isLoadingAnalysis}
             analysisError={analysisError}
             onClearAnalysisError={() => setAnalysisError(null)}
-            onCancelDrill={() => setCurrentView(activeTopic?.mode === 'dsa' ? 'dsa_setup' : 'setup')}
+            onCancelDrill={() => {
+              if (activeTopic?.mode === 'core') setCurrentView('core_setup');
+              else if (activeTopic?.mode === 'dsa') setCurrentView('dsa_setup');
+              else setCurrentView('setup');
+            }}
           />
         )}
 
@@ -412,15 +597,37 @@ export default function App() {
           />
         )}
 
+        {/* CS Core Fundamentals Feedback */}
+        {currentView === 'core_feedback' && (
+          <CoreFeedbackPage
+            analysis={currentAnalysis}
+            topicData={activeTopic}
+            onTryAgain={handleTryAgain}
+            onNewQuestion={handleNewCoreQuestion}
+            onStartFollowUp={handleStartCoreFollowUp}
+            onFinish={() => setCurrentView('progress')}
+          />
+        )}
+
+        {/* DSA Journey & Coding Profile Analysis */}
+        {currentView === 'dsa_journey' && (
+          <DsaJourneyPage
+            onStartDsaPracticeWithTopic={handleStartDsaWithTopic}
+            onStartDsaPracticeWithProblem={handleStartDsaWithProblem}
+          />
+        )}
+
         {/* Progress & Analytics Dashboard */}
         {currentView === 'progress' && (
           <ProgressPage
             stats={stats}
             dsaStats={dsaStats}
+            coreStats={coreStats}
             readiness={readiness}
             sessions={sessions}
             onStartPractice={() => setCurrentView('setup')}
             onStartDsaPractice={() => setCurrentView('dsa_setup')}
+            onStartCorePractice={() => setCurrentView('core_setup')}
           />
         )}
       </main>

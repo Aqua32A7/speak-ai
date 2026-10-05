@@ -76,12 +76,16 @@ speak ai/
 │   ├── conftest.py               # Root test configuration & path setup
 │   ├── main.py                   # FastAPI application & CORS routing
 │   ├── models/
-│   │   └── schemas.py            # Pydantic schemas (GeminiAnalysis, SpeechAnalysisResponse)
+│   │   └── schemas.py            # Pydantic schemas (General, DSA, Core, Journey)
 │   ├── services/
-│   │   └── gemini_service.py     # Google GenAI service & deterministic metrics
+│   │   ├── gemini_service.py     # Google GenAI service & deterministic metrics
+│   │   └── platform_fetcher.py   # SSRF-protected LeetCode & Codeforces fetcher
 │   └── tests/
 │       ├── test_schemas_and_metrics.py  # Unit tests for WPM & filler detection
-│       └── test_endpoints.py            # Unit tests for endpoints with mocked Gemini
+│       ├── test_endpoints.py            # Unit tests for general endpoints
+│       ├── test_dsa.py                  # Unit tests for DSA oral drills
+│       ├── test_core.py                 # Unit tests for CS Core mode
+│       └── test_journey.py              # Unit tests for DSA Journey & SSRF protections
 └── frontend/
     ├── package.json              # NPM dependencies & scripts
     ├── vite.config.js            # Vite configuration with React & Tailwind v4
@@ -103,19 +107,22 @@ speak ai/
         ├── pages/
         │   ├── HomePage.jsx        # Welcome dashboard & today's summary
         │   ├── SetupPage.jsx       # General drill difficulty & category parameters
-        │   ├── DsaSetupPage.jsx    # DSA Interview parameters (14 subtopics, 6 question types)
+        │   ├── DsaSetupPage.jsx    # DSA Interview parameters (14 subtopics, 6 question types, journey toggle)
+        │   ├── DsaJourneyPage.jsx  # Multi-platform profile manager, 14-topic matrix, & AI mentorship
+        │   ├── CoreSetupPage.jsx   # CS Core setup (10 subjects, Teach me vs Test me)
         │   ├── PracticePage.jsx    # 10s prep + 60s drill state machine
         │   ├── FeedbackPage.jsx    # General coach review & follow-up round trigger
         │   ├── DsaFeedbackPage.jsx # DSA evaluation, key points checklist, & chained follow-ups
-        │   └── ProgressPage.jsx    # Interview Readiness, DSA Mastery, & session history
+        │   ├── CoreFeedbackPage.jsx# 4-part structure evaluation, misconceptions, & Concept Refresher
+        │   └── ProgressPage.jsx    # Interview Readiness, DSA Mastery, Core Mastery, & session history
         └── services/
-            ├── api.js            # Fetch client for backend endpoints (General & DSA)
-            ├── storage.js        # LocalStorage persistence & readiness math
+            ├── api.js            # Fetch client for backend endpoints
+            ├── storage.js        # LocalStorage persistence & deterministic metrics
             └── useSpeechRecognition.js # Web Speech API continuous recognition hook
 ```
 
 ### Technology Highlights
-- **Backend**: Python 3.11+, FastAPI, Pydantic v2, `google-genai` official SDK, Uvicorn.
+- **Backend**: Python 3.11+, FastAPI, Pydantic v2, `google-genai` official SDK, Uvicorn, HTTPX.
 - **Frontend**: React 19, Vite 6, Tailwind CSS v4, Lucide React icons.
 - **Speech Capture**: Browser Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`).
 - **Data Persistence**: Client-side `localStorage` (transcripts, scores, and metrics only; raw audio is never recorded or stored).
@@ -124,7 +131,7 @@ speak ai/
 
 ## Key Features
 
-1. **Zero Hardcoded Prompts**: Every topic is generated dynamically by Google Gemini using high-temperature sampling (0.95) and conditioned on the student's recent drill history to prevent repetitions.
+1. **Zero Hardcoded Prompts**: Every topic is generated dynamically by Google Gemini using high-temperature sampling and conditioned on the student's recent drill history to prevent repetitions.
 2. **DSA Interview Mode (Spoken Explanations)**:
    - Dedicated oral mode designed for candidates with 400+ LeetCode problems (C++ context).
    - 14 Subtopics (Arrays & Strings, Linked Lists, Stacks & Queues, Hashing, Trees & BST, Graphs, Recursion & Backtracking, Dynamic Programming, Sorting & Searching, Heaps, Greedy, Two Pointers / Sliding Window, Bit Manipulation, Surprise Me).
@@ -134,12 +141,24 @@ speak ai/
    - Detects and flags any factual algorithmic **misconceptions**.
    - Supports up to **3 chained interviewer follow-up rounds** linked by `parent_session_id`.
    - Dedicated **DSA Speaking Mastery** analytics and weakest subtopic detection on the Progress dashboard.
-3. **Accurate Timestamp Timers**: Both the 10-second mental preparation timer and the 60-second speaking timer calculate real-time elapsed deltas using `Date.now()` and `performance.now()`. Timers do not drift or pause when mobile browsers throttle background tabs.
-4. **Deterministic Speech Metrics**: Words per minute (WPM) and filler word occurrences are computed deterministically in Python using strict regex tokenization and duration normalization—Gemini is never trusted for exact arithmetic.
-5. **Pause & Hesitation Tracking**: The frontend records timestamps for time-to-first-word, longest gap between speech bursts, and instances of pauses longer than 2 seconds. These delivery metrics are passed to Gemini so pacing feedback is grounded in real data.
-6. **Multi-Dimensional Coaching**: 7 scoring dimensions, exactly 3 prioritized improvements, key strengths, professional phrase upgrades, and a realistic college student model answer with highlighted key phrases.
-7. **Interviewer Follow-up Rounds**: After feedback, Gemini suggests a natural follow-up question. Clicking *"Answer Follow-up (60s)"* launches a linked round (`parent_session_id`) to simulate real interview back-and-forth.
-8. **Interview Readiness Indicators**: Evaluates Communication, Technical Explanation, Confidence, Fluency, and an overall Readiness Index derived from past drills (clearly labeled as practice indicators).
+3. **CS Core Fundamentals Mode**:
+   - Covers 10 foundational subjects: Operating Systems, DBMS & SQL, Computer Networks, Object-Oriented Programming, Computer Architecture, System Design basics, Web/HTTP & APIs, Security basics, Software Engineering & SDLC, and Git Version Control.
+   - **"Teach me first" vs "Test me directly"**: In teach mode, Gemini generates an engaging 150-200 word conceptual primer with real-world analogies before the drill starts.
+   - **4-Part Spoken Answer Structure**: Evaluates adherence to **Definition ➔ Mechanism ➔ Example ➔ Trade-off**, showing clear visual checkmarks for covered vs omitted components.
+   - **Concept Refresher**: Provides concise explanations, corrects gentle misconceptions, and offers an *"Explain it again"* 1-click retry.
+   - **Mastery Matrix**: Progress dashboard tracks per-subject accuracy across all 10 subjects and suggests the next highest-leverage subject.
+4. **DSA Profile Analysis & Journey**:
+   - Connects live statistics from **LeetCode** (public GraphQL) and **Codeforces** (official API).
+   - Full manual entry fallback for platforms without public APIs (GeeksforGeeks, CodeChef, HackerRank, AtCoder, etc.) with explicit *"Self-reported"* indicators.
+   - **Strict SSRF Protection**: Domain allowlisting (`leetcode.com`, `codeforces.com`), strict handle sanitization (`^[a-zA-Z0-9_\-]+$`), hardcoded upstream endpoints, 8-second timeout, 5MB response cap, in-memory caching (1 hour TTL), and sliding window rate limiting.
+   - **Deterministic Arithmetic**: Code calculates all totals, difficulty splits, and the 14-topic coverage matrix (Strong: ≥20, Moderate: 5–19, Untouched: <5). Gemini only provides qualitative mentorship.
+   - **Prompt Injection Defense**: All untrusted external strings are strictly wrapped in `<untrusted_user_data>` tags.
+   - **Snapshot Diff Tracking**: Displays historical momentum (`+X problems solved since last check`).
+   - **Journey-Driven DSA Questions**: Questions dynamically adapt to the user's strong topics, target gaps, or ask them to explain real recently solved problems out loud.
+5. **Accurate Timestamp Timers**: Both the 10-second mental preparation timer and the 60-second speaking timer calculate real-time elapsed deltas using `Date.now()` and `performance.now()`. Timers do not drift or pause when mobile browsers throttle background tabs.
+6. **Deterministic Speech Metrics**: Words per minute (WPM) and filler word occurrences are computed deterministically in Python using strict regex tokenization and duration normalization—Gemini is never trusted for exact arithmetic.
+7. **Pause & Hesitation Tracking**: The frontend records timestamps for time-to-first-word, longest gap between speech bursts, and instances of pauses longer than 2 seconds.
+8. **Multi-Dimensional Coaching**: 7 scoring dimensions, exactly 3 prioritized improvements, key strengths, professional phrase upgrades, and a realistic college student model answer with highlighted key phrases.
 9. **Dark / Light Mode**: Polished UI with full light and dark mode support, persisted in localStorage.
 
 ---
@@ -223,11 +242,26 @@ pytest -v
 
 Expected output:
 ```
+tests/test_core.py::test_core_analyze_rejects_short_transcript PASSED
+tests/test_core.py::test_core_question_endpoint_test_mode PASSED
+tests/test_core.py::test_core_question_endpoint_teach_mode PASSED
+tests/test_core.py::test_core_analyze_endpoint_with_mocked_gemini PASSED
+tests/test_core.py::test_core_followup_endpoint_with_mocked_gemini PASSED
+tests/test_dsa.py::test_dsa_analyze_rejects_short_transcript PASSED
+tests/test_dsa.py::test_dsa_question_endpoint PASSED
+tests/test_dsa.py::test_dsa_analyze_endpoint_with_mocked_gemini PASSED
+tests/test_dsa.py::test_dsa_followup_endpoint_with_mocked_gemini PASSED
 tests/test_endpoints.py::test_health_endpoint PASSED
 tests/test_endpoints.py::test_analyze_rejects_empty_or_short_transcript PASSED
 tests/test_endpoints.py::test_topic_endpoint_success PASSED
 tests/test_endpoints.py::test_analyze_endpoint_success_with_mocked_gemini PASSED
 tests/test_endpoints.py::test_followup_endpoint_success_with_mocked_gemini PASSED
+tests/test_journey.py::test_sanitize_and_extract_handle_valid PASSED
+tests/test_journey.py::test_sanitize_and_extract_handle_ssrf_rejection PASSED
+tests/test_journey.py::test_calculate_dsa_journey_deterministic_math PASSED
+tests/test_journey.py::test_fetch_dsa_profile_endpoint_mocked[asyncio] PASSED
+tests/test_journey.py::test_analyze_dsa_journey_endpoint_mocked[asyncio] PASSED
+tests/test_journey.py::test_dsa_question_with_journey_context[asyncio] PASSED
 tests/test_schemas_and_metrics.py::test_calculate_speech_metrics_basic PASSED
 tests/test_schemas_and_metrics.py::test_calculate_speech_metrics_wpm_accuracy PASSED
 tests/test_schemas_and_metrics.py::test_reliable_filler_detection PASSED
@@ -235,7 +269,7 @@ tests/test_schemas_and_metrics.py::test_excluded_fillers_not_counted PASSED
 tests/test_schemas_and_metrics.py::test_conversational_like_vs_verb_like PASSED
 tests/test_schemas_and_metrics.py::test_gemini_analysis_schema_validation PASSED
 tests/test_schemas_and_metrics.py::test_gemini_analysis_requires_exactly_three_improvements PASSED
-======================== 12 passed in 0.3s ========================
+======================== 27 passed in 0.4s ========================
 ```
 
 ### Production Build Verification

@@ -138,6 +138,8 @@ export default function PracticePage({
       questionType: topicData.question_type,
       mode: topicData.mode || 'general',
       roundNumber: topicData.roundNumber || 1,
+      subject: topicData.subject || '',
+      primer: topicData.primer || null,
     });
   }, [finalTranscript, transcript, remainingSeconds, metrics, onFinishDrill, stopListening, topicData]);
 
@@ -202,6 +204,9 @@ export default function PracticePage({
         questionType={topicData?.question_type}
         roundNumber={topicData?.roundNumber}
         isDsa={topicData?.mode === 'dsa'}
+        isCore={topicData?.mode === 'core'}
+        subject={topicData?.subject}
+        primer={topicData?.primer}
       />
 
       {/* Practice Arena */}

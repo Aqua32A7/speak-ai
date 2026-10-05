@@ -10,6 +10,9 @@ export default function TopicCard({
   questionType,
   roundNumber,
   isDsa = false,
+  isCore = false,
+  subject,
+  primer,
 }) {
   const getDifficultyColor = (diff) => {
     switch (diff?.toLowerCase()) {
@@ -22,23 +25,36 @@ export default function TopicCard({
     }
   };
 
+  const getGradient = () => {
+    if (isCore) return 'bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500';
+    if (isDsa) return 'bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500';
+    return 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500';
+  };
+
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 transition-colors duration-200">
+    <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 transition-colors duration-200 space-y-4">
       {/* Decorative top accent gradient */}
-      <div
-        className={`absolute top-0 left-0 right-0 h-1.5 ${
-          isDsa
-            ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500'
-            : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500'
-        }`}
-      />
+      <div className={`absolute top-0 left-0 right-0 h-1.5 ${getGradient()}`} />
 
       {/* Meta tags */}
-      <div className="flex flex-wrap items-center gap-2.5 mb-4">
+      <div className="flex flex-wrap items-center gap-2.5">
+        {isCore && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-800/60">
+            <Tag className="w-3 h-3" />
+            CS Fundamentals
+          </span>
+        )}
+
         {isDsa && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60">
             <Tag className="w-3 h-3" />
             DSA Interview
+          </span>
+        )}
+
+        {subject && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+            {subject}
           </span>
         )}
 
@@ -54,7 +70,7 @@ export default function TopicCard({
           </span>
         )}
 
-        {!isDsa && category && (
+        {!isDsa && !isCore && category && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800/60">
             <Tag className="w-3 h-3" />
             {category}
@@ -75,16 +91,32 @@ export default function TopicCard({
         )}
       </div>
 
+      {/* Primer Card if present */}
+      {primer && (
+        <div className="p-4 rounded-xl bg-violet-50/70 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-900/60 space-y-1.5">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-violet-800 dark:text-violet-300">
+            <span>📖 Concept Primer (Read & Prepare)</span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-normal">
+            {primer}
+          </p>
+        </div>
+      )}
+
       {/* Main topic statement */}
       <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-snug">
         {topic || 'Loading interview speaking drill...'}
       </h2>
 
       {/* Subtext prompt helper */}
-      <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
         <HelpCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
         <span>
-          {isDsa ? (
+          {isCore ? (
+            <>
+              <strong>4-Part Structure to Follow:</strong> Definition (what it is) ➔ Mechanism (how it works) ➔ Concrete Example ➔ Trade-off or Limitation.
+            </>
+          ) : isDsa ? (
             <>
               <strong>Oral DSA Structure:</strong> State the core idea ➔ Outline the approach ➔ Explain Time & Space Complexity ➔ Mention tricky edge cases.
             </>

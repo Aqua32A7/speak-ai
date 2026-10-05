@@ -55,7 +55,7 @@ export function saveSession(session) {
       time_to_first_word_seconds: session.time_to_first_word_seconds || 0,
       longest_pause_seconds: session.longest_pause_seconds || 0,
       pauses_over_2s_count: session.pauses_over_2s_count || 0,
-      // DSA Interview Mode fields
+      // DSA & Core Mode fields
       mode: session.mode || 'general',
       subtopic: session.subtopic || '',
       question_type: session.question_type || '',
@@ -68,6 +68,12 @@ export function saveSession(session) {
       covered_points: session.covered_points || [],
       missed_points: session.missed_points || [],
       misconceptions: session.misconceptions || [],
+      // CS Core Fundamentals Mode fields
+      subject: session.subject || '',
+      concept_accuracy: session.concept_accuracy || 0,
+      depth: session.depth || 0,
+      examples_and_analogies: session.examples_and_analogies || 0,
+      refresher: session.refresher || null,
     };
 
     const updated = [newSession, ...sessions];
@@ -203,6 +209,141 @@ export function getDsaStats() {
     subtopic_stats,
     weakest_subtopics,
     recent_dsa_questions,
+  };
+}
+
+export const CORE_SUBJECTS = [
+  'Operating Systems',
+  'DBMS and SQL',
+  'Computer Networks',
+  'Object-Oriented Programming',
+  'Computer Architecture basics',
+  'System Design basics',
+  'Web, HTTP and APIs',
+  'Security basics',
+  'Software Engineering and SDLC',
+  'Version Control (Git)',
+];
+
+/**
+ * Get recent CS Core questions to pass to Gemini to avoid duplicates
+ */
+export function getRecentCoreQuestions(limit = 15) {
+  const sessions = getSessions();
+  const questions = [];
+  const seen = new Set();
+  for (const s of sessions) {
+    if (s.mode === 'core' && s.topic && !seen.has(s.topic.toLowerCase())) {
+      seen.add(s.topic.toLowerCase());
+      questions.push(s.topic);
+      if (questions.length >= limit) break;
+    }
+  }
+  return questions;
+}
+
+/**
+ * Compute aggregate CS Core Fundamentals statistics
+ */
+export function getCoreStats() {
+  const sessions = getSessions().filter((s) => s.mode === 'core');
+  const total = sessions.length;
+
+  if (total === 0) {
+    return {
+      total_core: 0,
+      avg_overall_score: 0,
+      avg_concept_accuracy: 0,
+      avg_structure_score: 0,
+      avg_depth_score: 0,
+      subject_mastery: {},
+      weakest_subtopics: [],
+      recommended_next_subject: 'Operating Systems',
+      recent_core_questions: [],
+    };
+  }
+
+  let totalOverall = 0;
+  let totalAccuracy = 0;
+  let totalStructure = 0;
+  let totalDepth = 0;
+  const subjectMap = {};
+  const subtopicMap = {};
+
+  for (const s of sessions) {
+    totalOverall += s.overall_score || 0;
+    totalAccuracy += s.concept_accuracy || 0;
+    totalStructure += s.structure || 0;
+    totalDepth += s.depth || 0;
+
+    const subj = s.subject || 'Operating Systems';
+    if (!subjectMap[subj]) {
+      subjectMap[subj] = { count: 0, total_accuracy: 0, total_score: 0 };
+    }
+    subjectMap[subj].count++;
+    subjectMap[subj].total_accuracy += s.concept_accuracy || 0;
+    subjectMap[subj].total_score += s.overall_score || 0;
+
+    const sub = s.subtopic || subj;
+    if (!subtopicMap[sub]) {
+      subtopicMap[sub] = { subtopic: sub, subject: subj, count: 0, total_accuracy: 0 };
+    }
+    subtopicMap[sub].count++;
+    subtopicMap[sub].total_accuracy += s.concept_accuracy || 0;
+  }
+
+  const subject_mastery = {};
+  for (const [subj, data] of Object.entries(subjectMap)) {
+    subject_mastery[subj] = {
+      count: data.count,
+      avg_accuracy: Number((data.total_accuracy / data.count).toFixed(1)),
+      avg_score: Number((data.total_score / data.count).toFixed(1)),
+    };
+  }
+
+  // Weakest subtopics sorted ascending by accuracy
+  const subtopicList = Object.values(subtopicMap).map((item) => ({
+    subtopic: item.subtopic,
+    subject: item.subject,
+    count: item.count,
+    avg_accuracy: Number((item.total_accuracy / item.count).toFixed(1)),
+  }));
+  subtopicList.sort((a, b) => a.avg_accuracy - b.avg_accuracy);
+  const weakest_subtopics = subtopicList.slice(0, 3);
+
+  // Recommended next subject: first unpracticed from CORE_SUBJECTS, or lowest avg_accuracy
+  let recommended_next_subject = CORE_SUBJECTS[0];
+  const unpracticed = CORE_SUBJECTS.find((s) => !subjectMap[s]);
+  if (unpracticed) {
+    recommended_next_subject = unpracticed;
+  } else {
+    const sortedSubjects = Object.entries(subject_mastery).sort(
+      (a, b) => a[1].avg_accuracy - b[1].avg_accuracy
+    );
+    if (sortedSubjects.length > 0) {
+      recommended_next_subject = sortedSubjects[0][0];
+    }
+  }
+
+  const recent_core_questions = sessions.slice(0, 5).map((s) => ({
+    id: s.id,
+    topic: s.topic,
+    subject: s.subject,
+    subtopic: s.subtopic,
+    score: s.overall_score,
+    timestamp: s.timestamp,
+  }));
+
+  return {
+    total_core: total,
+    avg_overall_score: Number((totalOverall / total).toFixed(1)),
+    avg_concept_accuracy: Number((totalAccuracy / total).toFixed(1)),
+    avg_structure_score: Number((totalStructure / total).toFixed(1)),
+    avg_depth_score: Number((totalDepth / total).toFixed(1)),
+    subject_mastery,
+    weakest_subtopics,
+    recommended_next_subject,
+    recent_core_questions,
   };
 }
 
@@ -349,11 +490,17 @@ export function getInterviewReadiness() {
   let sumFluency = 0;
 
   for (const s of recent) {
-    // If it's a DSA session, map DSA metrics sensibly:
+    // Map metrics across General, DSA, and Core modes:
     const clarity = s.clarity_score || s.explanation_clarity || 0;
     const grammar = s.grammar_score || s.explanation_clarity || 0;
-    const tech = s.technical_depth_score || s.complexity_awareness || s.concept_correctness || 0;
-    const relevance = s.relevance_score || s.concept_correctness || 0;
+    const tech =
+      s.technical_depth_score ||
+      s.concept_accuracy ||
+      s.complexity_awareness ||
+      s.concept_correctness ||
+      s.depth ||
+      0;
+    const relevance = s.relevance_score || s.concept_accuracy || s.concept_correctness || 0;
     const confidence = s.confidence_score || s.structure || 0;
     const fluency = s.fluency_score || 0;
 
@@ -413,4 +560,175 @@ export function setStoredTheme(theme) {
   } catch (err) {
     console.error('Failed to set theme in localStorage:', err);
   }
+}
+
+// ============================================================================
+// DSA Journey & Coding Platform Storage
+// ============================================================================
+
+const STORAGE_KEY_DSA_PLATFORMS = 'speakprep_dsa_platforms_v1';
+const STORAGE_KEY_DSA_JOURNEY = 'speakprep_dsa_journey_v1';
+const STORAGE_KEY_DSA_SNAPSHOTS = 'speakprep_dsa_snapshots_v1';
+
+/**
+ * Get all connected platforms (LeetCode, Codeforces, or self-reported)
+ */
+export function getDsaPlatforms() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DSA_PLATFORMS);
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.error('Failed to load DSA platforms:', err);
+    return [];
+  }
+}
+
+/**
+ * Save or update a coding platform profile
+ */
+export function saveDsaPlatform(platformData) {
+  try {
+    const platforms = getDsaPlatforms();
+    const existingIndex = platforms.findIndex(
+      (p) =>
+        p.platform.toLowerCase() === platformData.platform.toLowerCase() &&
+        p.handle.toLowerCase() === platformData.handle.toLowerCase()
+    );
+
+    if (existingIndex >= 0) {
+      platforms[existingIndex] = { ...platforms[existingIndex], ...platformData };
+    } else {
+      platforms.push(platformData);
+    }
+
+    localStorage.setItem(STORAGE_KEY_DSA_PLATFORMS, JSON.stringify(platforms));
+    return platforms;
+  } catch (err) {
+    console.error('Failed to save DSA platform:', err);
+    return [];
+  }
+}
+
+/**
+ * Remove a platform profile
+ */
+export function removeDsaPlatform(platform, handle) {
+  try {
+    const platforms = getDsaPlatforms().filter(
+      (p) =>
+        !(
+          p.platform.toLowerCase() === platform.toLowerCase() &&
+          p.handle.toLowerCase() === handle.toLowerCase()
+        )
+    );
+    localStorage.setItem(STORAGE_KEY_DSA_PLATFORMS, JSON.stringify(platforms));
+    return platforms;
+  } catch (err) {
+    console.error('Failed to remove DSA platform:', err);
+    return [];
+  }
+}
+
+/**
+ * Get stored Journey analysis data (calculation + qualitative Gemini mentorship)
+ */
+export function getDsaJourneyData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DSA_JOURNEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (err) {
+    console.error('Failed to load DSA journey data:', err);
+    return null;
+  }
+}
+
+/**
+ * Save Journey analysis data and record a snapshot for progress tracking
+ */
+export function saveDsaJourneyData(journeyData) {
+  try {
+    const dataWithTimestamp = {
+      ...journeyData,
+      lastUpdated: new Date().toISOString(),
+    };
+    localStorage.setItem(STORAGE_KEY_DSA_JOURNEY, JSON.stringify(dataWithTimestamp));
+
+    const totalSolved = journeyData?.calculation?.total_solved || 0;
+    recordDsaSnapshot(totalSolved);
+    return dataWithTimestamp;
+  } catch (err) {
+    console.error('Failed to save DSA journey data:', err);
+    return null;
+  }
+}
+
+/**
+ * Record historical snapshot of total solved problems
+ */
+export function recordDsaSnapshot(totalSolved) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DSA_SNAPSHOTS);
+    const snapshots = raw ? JSON.parse(raw) : [];
+
+    const now = Date.now();
+    // Don't record duplicate snapshots in the same hour
+    const last = snapshots[snapshots.length - 1];
+    if (last && now - last.timestamp < 3600000 && last.totalSolved === totalSolved) {
+      return;
+    }
+
+    snapshots.push({ timestamp: now, totalSolved });
+    // Keep last 30 snapshots
+    const trimmed = snapshots.slice(-30);
+    localStorage.setItem(STORAGE_KEY_DSA_SNAPSHOTS, JSON.stringify(trimmed));
+  } catch (err) {
+    console.error('Failed to record DSA snapshot:', err);
+  }
+}
+
+/**
+ * Get progress comparison since last snapshot
+ */
+export function getDsaSnapshotDiff(currentTotal) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DSA_SNAPSHOTS);
+    const snapshots = raw ? JSON.parse(raw) : [];
+    if (snapshots.length < 2) return null;
+
+    // Compare with the snapshot immediately preceding the latest
+    const prev = snapshots[snapshots.length - 2];
+    const diff = currentTotal - prev.totalSolved;
+    const dateStr = new Date(prev.timestamp).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
+
+    return {
+      diff,
+      prevTotal: prev.totalSolved,
+      lastCheckDate: dateStr,
+    };
+  } catch (err) {
+    console.error('Failed to compute snapshot diff:', err);
+    return null;
+  }
+}
+
+/**
+ * Extract compact journey context to pass to Gemini DSA question generator
+ */
+export function getDsaJourneyBrief() {
+  const data = getDsaJourneyData();
+  if (!data?.calculation) return null;
+
+  const calc = data.calculation;
+  const analysis = data.analysis;
+
+  return {
+    strong_topics: calc.strong_topics || [],
+    weak_topics: calc.weak_topics || [],
+    recent_problems: (calc.recent_solved_problems || []).map((p) => p.title),
+    total_solved: calc.total_solved || 0,
+    recommended_focus_topics: analysis?.recommended_focus_topics || [],
+  };
 }

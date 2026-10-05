@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Terminal, Code2, Sparkles, Sliders, ArrowRight, Check, Cpu, Brain } from 'lucide-react';
+import { Terminal, Code2, Sparkles, Sliders, ArrowRight, Check, Cpu, Brain, Compass, Target } from 'lucide-react';
 import ErrorBanner from '../components/ErrorBanner';
+import { getDsaJourneyBrief, getDsaJourneyData } from '../services/storage';
 
 const SUBTOPICS = [
   'Surprise Me',
@@ -50,10 +51,14 @@ const DIFFICULTIES = [
   },
 ];
 
-export default function DsaSetupPage({ onGenerateQuestion, isLoading, error, onClearError }) {
-  const [selectedSubtopic, setSelectedSubtopic] = useState('Surprise Me');
+export default function DsaSetupPage({ onGenerateQuestion, isLoading, error, onClearError, initialSubtopic = null }) {
+  const journeyBrief = getDsaJourneyBrief();
+  const journeyData = getDsaJourneyData();
+
+  const [selectedSubtopic, setSelectedSubtopic] = useState(initialSubtopic || 'Surprise Me');
   const [selectedType, setSelectedType] = useState('Surprise Me');
   const [selectedDifficulty, setSelectedDifficulty] = useState('Medium');
+  const [useJourneyPersonalization, setUseJourneyPersonalization] = useState(Boolean(journeyBrief));
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -61,7 +66,14 @@ export default function DsaSetupPage({ onGenerateQuestion, isLoading, error, onC
       subtopic: selectedSubtopic,
       questionType: selectedType,
       difficulty: selectedDifficulty,
+      journeyContext: useJourneyPersonalization ? journeyBrief : null,
     });
+  };
+
+  const handleSelectWeakTopicDrill = () => {
+    const weak = journeyBrief?.weak_topics?.[0] || journeyBrief?.recommended_focus_topics?.[0] || 'Graphs';
+    setSelectedSubtopic(weak);
+    setSelectedType('Explain an Approach');
   };
 
   return (
@@ -79,23 +91,63 @@ export default function DsaSetupPage({ onGenerateQuestion, isLoading, error, onC
         </p>
       </div>
 
-      {/* Candidate Profile Callout */}
-      <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-indigo-950 text-white border border-slate-800 shadow-sm flex items-start gap-3">
-        <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
-          <Brain className="w-5 h-5" />
-        </div>
-        <div className="space-y-1 text-xs">
-          <div className="font-bold text-slate-100 flex items-center gap-2">
-            <span>Interview Calibration: 400+ Problems / C++ Context</span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono">
-              Oral Only
-            </span>
+      {/* DSA Journey Profile Personalization Callout */}
+      {journeyBrief ? (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-950/70 via-slate-900 to-emerald-950/70 text-white border border-sky-500/30 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Compass className="w-4 h-4 text-sky-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-sky-300">
+                DSA Journey Connected ({journeyBrief.total_solved} solved)
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
+              Gemini can tailor prompts to your strengths ({journeyBrief.strong_topics.slice(0, 2).join(', ') || 'general'}),
+              recent solved problems ({journeyBrief.recent_problems.slice(0, 2).join(', ') || 'N/A'}),
+              or target gaps ({journeyBrief.weak_topics.slice(0, 2).join(', ') || 'untouched topics'}).
+            </p>
           </div>
-          <p className="text-slate-300/90 leading-relaxed">
-            Gemini tailors technical rigor to someone who already knows the algorithms and evaluates how fluently you convey logic to an interviewer in under 60 seconds.
-          </p>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleSelectWeakTopicDrill}
+              className="px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Target className="w-3.5 h-3.5" />
+              <span>Target Weakest Topic</span>
+            </button>
+
+            <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-xs font-semibold cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useJourneyPersonalization}
+                onChange={(e) => setUseJourneyPersonalization(e.target.checked)}
+                className="rounded accent-sky-500"
+              />
+              <span>Condition on Journey</span>
+            </label>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Default Candidate Profile Callout */
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-indigo-950 text-white border border-slate-800 shadow-sm flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+            <Brain className="w-5 h-5" />
+          </div>
+          <div className="space-y-1 text-xs">
+            <div className="font-bold text-slate-100 flex items-center gap-2">
+              <span>Interview Calibration: 400+ Problems / C++ Context</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono">
+                Oral Only
+              </span>
+            </div>
+            <p className="text-slate-300/90 leading-relaxed">
+              Gemini tailors technical rigor to someone who already knows the algorithms and evaluates how fluently you convey logic to an interviewer in under 60 seconds.
+            </p>
+          </div>
+        </div>
+      )}
 
       <ErrorBanner message={error} onDismiss={onClearError} />
 

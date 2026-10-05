@@ -1,8 +1,15 @@
 import React from 'react';
-import { Play, Sparkles, Clock, Target, Award, ArrowRight, CheckCircle2, Code2, Terminal } from 'lucide-react';
+import { Play, Sparkles, Clock, Target, Award, ArrowRight, CheckCircle2, Code2, Terminal, BookOpen, Compass } from 'lucide-react';
 import StatCard from '../components/StatCard';
 
-export default function HomePage({ stats, onStartPractice, onStartDsaPractice, onViewProgress }) {
+export default function HomePage({
+  stats,
+  onStartPractice,
+  onStartDsaPractice,
+  onStartCorePractice,
+  onViewJourney,
+  onViewProgress,
+}) {
   const today = stats?.today_stats || {
     sessions_completed: 0,
     avg_speaking_time: 0,
@@ -17,7 +24,7 @@ export default function HomePage({ stats, onStartPractice, onStartDsaPractice, o
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-80 h-80 rounded-full bg-violet-500/10 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-2xl space-y-6">
+        <div className="relative z-10 max-w-3xl space-y-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-indigo-200 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>Built for AIML & Tech Interview Preparation</span>
@@ -29,67 +36,123 @@ export default function HomePage({ stats, onStartPractice, onStartDsaPractice, o
 
           <p className="text-base sm:text-xl text-indigo-100/90 font-normal leading-relaxed">
             Practice speaking. Build confidence. Get interview-ready.
-            Master technical explanations, DSA concepts, and behavioral answers through structured 60-second drills with real-time Gemini AI coaching.
+            Master technical explanations, DSA intuition, and CS core concepts through structured 60-second drills with real-time Gemini AI coaching.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-3">
             <button
               onClick={onStartPractice}
-              className="px-6 py-3.5 rounded-2xl bg-white text-indigo-900 font-bold text-sm sm:text-base shadow-lg hover:bg-indigo-50 active:scale-95 transition-all flex items-center gap-2.5 group cursor-pointer"
+              className="px-5 py-3 rounded-2xl bg-white text-indigo-900 font-bold text-sm shadow-lg hover:bg-indigo-50 active:scale-95 transition-all flex items-center gap-2 group cursor-pointer"
             >
               <Play className="w-4 h-4 fill-indigo-900 group-hover:scale-110 transition-transform" />
-              <span>General Practice Drill</span>
+              <span>General Practice</span>
             </button>
 
             <button
               onClick={onStartDsaPractice}
-              className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2.5 cursor-pointer"
+              className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer"
             >
               <Code2 className="w-4 h-4 stroke-[2.5]" />
-              <span>DSA Interview Mode</span>
+              <span>DSA Interview</span>
+            </button>
+
+            <button
+              onClick={onStartCorePractice}
+              className="px-5 py-3 rounded-2xl bg-purple-500 hover:bg-purple-400 active:scale-95 text-white font-bold text-sm shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <BookOpen className="w-4 h-4 stroke-[2.5]" />
+              <span>CS Fundamentals</span>
+            </button>
+
+            <button
+              onClick={onViewJourney}
+              className="px-4 py-3 rounded-2xl bg-sky-600/80 hover:bg-sky-500 active:scale-95 text-white font-semibold text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <Compass className="w-4 h-4" />
+              <span>DSA Journey</span>
             </button>
 
             <button
               onClick={onViewProgress}
-              className="px-5 py-3.5 rounded-2xl bg-indigo-950/60 hover:bg-indigo-950/90 text-white font-semibold text-sm border border-indigo-400/30 transition-all flex items-center gap-2 cursor-pointer"
+              className="px-4 py-3 rounded-2xl bg-indigo-950/60 hover:bg-indigo-950/90 text-white font-semibold text-sm border border-indigo-400/30 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <span>View Readiness</span>
+              <span>Readiness</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* DSA Interview Mode Spotlight Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-950 to-indigo-950 text-white p-6 sm:p-8 border border-emerald-500/30 shadow-xl">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-xl">
+      {/* Feature Grid: DSA Mode + CS Fundamentals */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* DSA Interview Mode Spotlight Card */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950 text-white p-6 sm:p-8 border border-emerald-500/30 shadow-xl flex flex-col justify-between space-y-6">
+          <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
               <Terminal className="w-3.5 h-3.5" />
-              <span>NEW FEATURE • DSA INTERVIEW MODE</span>
+              <span>DSA INTERVIEW MODE</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
-              Explain Algorithms & Data Structures Out Loud
+              Explain Algorithms Out Loud
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Designed for candidates with 400+ LeetCode problems solved. Practice oral explanations of intuition, complexity, trade-offs, and edge cases with up to 3 chained interviewer follow-ups.
+              Practice oral intuition, complexities, and trade-offs across 14 subtopics with up to 3 chained interviewer follow-ups.
             </p>
-            <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
-              <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">14 Subtopics</span>
-              <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">6 Question Types</span>
-              <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">Chained Follow-ups</span>
-              <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">Key Points Checklist</span>
+            <div className="flex flex-wrap gap-1.5 pt-1 text-[11px] text-slate-300">
+              <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">14 Topics</span>
+              <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">6 Question Types</span>
+              <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">Chained Follow-ups</span>
             </div>
           </div>
 
-          <button
-            onClick={onStartDsaPractice}
-            className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-          >
-            <Terminal className="w-4 h-4" />
-            <span>Start DSA Drill</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={onStartDsaPractice}
+              className="flex-1 px-4 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Terminal className="w-4 h-4" />
+              <span>Start DSA Drill</span>
+            </button>
+            <button
+              onClick={onViewJourney}
+              className="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Compass className="w-3.5 h-3.5 text-sky-400" />
+              <span>Stats</span>
+            </button>
+          </div>
+        </div>
+
+        {/* CS Core Fundamentals Mode Card */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-purple-950 text-white p-6 sm:p-8 border border-purple-500/30 shadow-xl flex flex-col justify-between space-y-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>CS FUNDAMENTALS MODE</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+              4-Part Spoken Structure
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Master OS, DBMS, Networks, OOP, System Design, and more. Test yourself or learn first with dynamic primers before speaking.
+            </p>
+            <div className="flex flex-wrap gap-1.5 pt-1 text-[11px] text-slate-300">
+              <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">10 Core Subjects</span>
+              <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">Teach vs Test</span>
+              <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">Def • Mech • Ex • Trade-off</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={onStartCorePractice}
+              className="w-full px-4 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Start CS Core Drill</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
