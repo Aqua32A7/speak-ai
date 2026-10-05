@@ -25,13 +25,16 @@ import {
   getDsaPlatforms,
   clearAllUserData,
 } from '../services/storage';
-import { useSpeechSynthesis } from '../services/useSpeechSynthesis';
+import { useSpeechSynthesis, getVoiceBadge } from '../services/useSpeechSynthesis';
 
 export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
   // Speech synthesis hook
   const {
     voices,
+    modernVoices,
+    standardVoices,
     selectedVoice,
+    isModernVoiceSelected,
     selectVoice,
     speechRate,
     setSpeechRate,
@@ -381,10 +384,23 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
           </div>
 
           {/* Voice Picker Dropdown */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Interviewer Voice
-            </label>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Interviewer Voice
+              </label>
+              {isModernVoiceSelected ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300">
+                  <Sparkles className="w-3 h-3 text-violet-600 dark:text-violet-400" />
+                  ✨ Modern Voice Active
+                </span>
+              ) : (
+                <span className="text-[10px] text-slate-400">
+                  Standard Voice Active
+                </span>
+              )}
+            </div>
+
             <select
               value={selectedVoiceUri}
               onChange={(e) => {
@@ -396,18 +412,36 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
               {voices.length === 0 ? (
                 <option value="">Default System Voice</option>
               ) : (
-                voices.map((v) => {
-                  const isRecommended =
-                    v.lang === 'en-IN' ||
-                    /natural|google|neural|samantha|karen|daniel/i.test(v.name);
-                  return (
-                    <option key={v.voiceURI} value={v.voiceURI}>
-                      {v.name} ({v.lang}) {isRecommended ? '★ Recommended' : ''}
-                    </option>
-                  );
-                })
+                <>
+                  {modernVoices.length > 0 && (
+                    <optgroup label="✨ Recommended Modern & Natural Voices">
+                      {modernVoices.map((v) => {
+                        const badge = getVoiceBadge(v);
+                        return (
+                          <option key={v.voiceURI} value={v.voiceURI}>
+                            {v.name} ({v.lang}) {badge ? `[${badge}]` : ''}
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  )}
+                  {standardVoices.length > 0 && (
+                    <optgroup label="Standard System Voices">
+                      {standardVoices.map((v) => (
+                        <option key={v.voiceURI} value={v.voiceURI}>
+                          {v.name} ({v.lang})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </>
               )}
             </select>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {isModernVoiceSelected
+                ? 'High-fidelity natural voice prioritized for realistic conversational interview cadences.'
+                : 'Select any voice from "Recommended Modern & Natural Voices" for the most human-like experience.'}
+            </p>
           </div>
 
           {/* Speech Speed Selector */}
