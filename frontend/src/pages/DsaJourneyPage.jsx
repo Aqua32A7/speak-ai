@@ -205,7 +205,7 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
   });
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-10 animate-in fade-in duration-200">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6 sm:space-y-10 animate-in fade-in duration-200">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -217,17 +217,17 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Your Algorithmic Footprint
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
             Connect your public LeetCode and Codeforces accounts or self-report other platforms. Pre-calculated statistics power personalized oral DSA interview questions.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
           {platforms.length > 0 && (
             <button
               onClick={handleRunAnalysis}
               disabled={isAnalyzing}
-              className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Sparkles className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : 'text-amber-300'}`} />
               <span>{isAnalyzing ? 'Analyzing with Gemini...' : 'Analyze with Gemini'}</span>
@@ -236,7 +236,7 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
 
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-xs sm:text-sm shadow-sm hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-xs sm:text-sm shadow-sm hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Platform</span>
@@ -246,7 +246,7 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
 
       {/* Snapshot Diff Notification Banner */}
       {snapshotDiff && snapshotDiff.diff !== 0 && (
-        <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-between gap-3 text-xs sm:text-sm">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-between gap-3 text-xs sm:text-sm">
           <div className="flex items-center gap-2.5 text-emerald-800 dark:text-emerald-300">
             <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>
@@ -259,7 +259,7 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
 
       {/* Add Platform Form Accordion */}
       {showAddForm && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-sky-300/60 dark:border-sky-800/60 shadow-lg space-y-5 animate-in slide-in-from-top-2 duration-150">
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-sky-300/60 dark:border-sky-800/60 shadow-lg space-y-5 animate-in slide-in-from-top-2 duration-150">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Shield className="w-4 h-4 text-sky-500" />
@@ -479,7 +479,7 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
       )}
 
       {/* Connected Platforms List */}
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-4">
+      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-8 space-y-4">
         <h2 className="text-base font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
           <Code2 className="w-4 h-4 text-sky-500" />
           <span>Connected Coding Platforms ({platforms.length})</span>
@@ -625,7 +625,7 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
 
       {/* 14 Standard Topics Coverage Matrix */}
       {calculation && calculation.topic_coverage.length > 0 && (
-        <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-6">
+        <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
@@ -638,7 +638,7 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
             </div>
 
             {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs">
+            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs">
               <button
                 onClick={() => setTopicFilter('all')}
                 className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
@@ -749,7 +749,7 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
 
       {/* Gemini Mentorship Insights Card */}
       {analysis && (
-        <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white p-6 sm:p-8 border border-sky-500/30 shadow-xl space-y-6">
+        <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white p-4 sm:p-8 border border-sky-500/30 shadow-xl space-y-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400">
               <Sparkles className="w-4 h-4" />
@@ -832,7 +832,7 @@ export default function DsaJourneyPage({ onStartDsaPracticeWithTopic, onStartDsa
 
       {/* Recent Solved Problems List */}
       {calculation && calculation.recent_solved_problems.length > 0 && (
-        <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-4">
+        <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-8 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">

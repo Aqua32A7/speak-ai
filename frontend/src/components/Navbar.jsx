@@ -1,9 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Mic, Moon, Sun, Activity, Sparkles, Code2, BookOpen, Compass, FolderGit2, Settings, Volume2, VolumeX } from 'lucide-react';
+import {
+  Mic,
+  Moon,
+  Sun,
+  Activity,
+  Sparkles,
+  Code2,
+  BookOpen,
+  Compass,
+  FolderGit2,
+  Settings,
+  Volume2,
+  VolumeX,
+  Menu,
+  X,
+  Home,
+} from 'lucide-react';
 import { isVoiceMuted, toggleVoiceMute } from '../services/storage';
 
-export default function Navbar({ currentView, setCurrentView, theme, toggleTheme, health, isDsaMode, isCoreMode, isProjectMode }) {
+export default function Navbar({
+  currentView,
+  setCurrentView,
+  theme,
+  toggleTheme,
+  health,
+  isDsaMode,
+  isCoreMode,
+  isProjectMode,
+}) {
   const [muted, setMuted] = useState(isVoiceMuted);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleSettingsChanged = () => {
@@ -21,184 +47,402 @@ export default function Navbar({ currentView, setCurrentView, theme, toggleTheme
     const next = toggleVoiceMute();
     setMuted(next);
   };
-  const isPracticeActive = currentView === 'setup' || (currentView === 'practice' && !isDsaMode && !isCoreMode && !isProjectMode) || (currentView === 'feedback' && !isDsaMode && !isCoreMode && !isProjectMode);
-  const isDsaActive = currentView === 'dsa_setup' || currentView === 'dsa_practice' || (currentView === 'practice' && isDsaMode) || currentView === 'dsa_feedback' || (currentView === 'feedback' && isDsaMode);
-  const isCoreActive = currentView === 'core_setup' || currentView === 'core_practice' || (currentView === 'practice' && isCoreMode) || currentView === 'core_feedback' || (currentView === 'feedback' && isCoreMode);
-  const isProjectActive = currentView === 'projects' || currentView === 'project_setup' || currentView === 'project_practice' || currentView === 'project_feedback' || (currentView === 'practice' && isProjectMode);
+
+  const navigateTo = (view) => {
+    setCurrentView(view);
+    setIsMobileMenuOpen(false);
+  };
+
+  const isPracticeActive =
+    currentView === 'setup' ||
+    (currentView === 'practice' && !isDsaMode && !isCoreMode && !isProjectMode) ||
+    (currentView === 'feedback' && !isDsaMode && !isCoreMode && !isProjectMode);
+
+  const isDsaActive =
+    currentView === 'dsa_setup' ||
+    currentView === 'dsa_practice' ||
+    (currentView === 'practice' && isDsaMode) ||
+    currentView === 'dsa_feedback' ||
+    (currentView === 'feedback' && isDsaMode);
+
+  const isCoreActive =
+    currentView === 'core_setup' ||
+    currentView === 'core_practice' ||
+    (currentView === 'practice' && isCoreMode) ||
+    currentView === 'core_feedback' ||
+    (currentView === 'feedback' && isCoreMode);
+
+  const isProjectActive =
+    currentView === 'projects' ||
+    currentView === 'project_setup' ||
+    currentView === 'project_practice' ||
+    currentView === 'project_feedback' ||
+    (currentView === 'practice' && isProjectMode);
+
   const isJourneyActive = currentView === 'dsa_journey';
+  const isProgressActive = currentView === 'progress';
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        
-        {/* Brand */}
-        <div 
-          onClick={() => setCurrentView('home')}
-          className="flex items-center gap-2.5 cursor-pointer group shrink-0"
-        >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-200">
-            <Mic className="w-5 h-5" />
+    <>
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          
+          {/* Brand */}
+          <div
+            onClick={() => navigateTo('home')}
+            className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group shrink-0"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-200">
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-base sm:text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200">
+                  SpeakPrep
+                </span>
+                <span className="text-[10px] sm:text-xs font-semibold px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
+                  AI
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
+                60s Interview Communication
+              </p>
+            </div>
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200">
-                SpeakPrep
-              </span>
-              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
-                AI
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 py-1">
+            <button
+              onClick={() => navigateTo('home')}
+              className={`px-3 py-1.5 rounded-lg text-xs xl:text-sm font-medium transition-colors shrink-0 ${
+                currentView === 'home'
+                  ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              Home
+            </button>
+
+            <button
+              onClick={() => navigateTo('setup')}
+              className={`px-3 py-1.5 rounded-lg text-xs xl:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
+                isPracticeActive && !isDsaActive && !isCoreActive && !isProjectActive
+                  ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Practice</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('projects')}
+              className={`px-3 py-1.5 rounded-lg text-xs xl:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
+                isProjectActive
+                  ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              <FolderGit2 className="w-3.5 h-3.5 text-teal-500" />
+              <span>Projects</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('dsa_setup')}
+              className={`px-3 py-1.5 rounded-lg text-xs xl:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
+                isDsaActive
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              <Code2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span>DSA</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('core_setup')}
+              className={`px-3 py-1.5 rounded-lg text-xs xl:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
+                isCoreActive
+                  ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 text-purple-500" />
+              <span>CS Core</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('dsa_journey')}
+              className={`px-3 py-1.5 rounded-lg text-xs xl:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
+                isJourneyActive
+                  ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5 text-sky-500" />
+              <span>DSA Journey</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('progress')}
+              className={`px-3 py-1.5 rounded-lg text-xs xl:text-sm font-medium transition-colors shrink-0 ${
+                isProgressActive
+                  ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              Progress
+            </button>
+          </nav>
+
+          {/* Right Controls */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Health indicator (desktop only) */}
+            <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mr-1">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  health?.status === 'healthy' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                }`}
+              />
+              <span className="text-[11px] font-mono">
+                {health?.gemini_configured ? health?.model : 'API Ready'}
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
-              60s Interview Communication
-            </p>
-          </div>
-        </div>
 
-        {/* Navigation links */}
-        <nav className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1">
-          <button
-            onClick={() => setCurrentView('home')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors shrink-0 ${
-              currentView === 'home'
-                ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            Home
-          </button>
-          
-          <button
-            onClick={() => setCurrentView('setup')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
-              isPracticeActive && !isDsaActive && !isCoreActive && !isProjectActive
-                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-            <span className="hidden sm:inline">Practice</span>
-            <span className="sm:hidden">Drill</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('projects')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
-              isProjectActive
-                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            <FolderGit2 className="w-3.5 h-3.5 text-teal-500" />
-            <span>Projects</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('dsa_setup')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
-              isDsaActive
-                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            <Code2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>DSA</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('core_setup')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
-              isCoreActive
-                ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5 text-purple-500" />
-            <span className="hidden sm:inline">CS Core</span>
-            <span className="sm:hidden">Core</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('dsa_journey')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 shrink-0 ${
-              isJourneyActive
-                ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            <Compass className="w-3.5 h-3.5 text-sky-500" />
-            <span className="hidden md:inline">DSA Journey</span>
-            <span className="md:hidden">Journey</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('progress')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors shrink-0 ${
-              currentView === 'progress'
-                ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-semibold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            Progress
-          </button>
-        </nav>
-
-        {/* Controls: Health + Settings + Theme */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Health indicator */}
-          <div className="hidden lg:flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                health?.status === 'healthy' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+            {/* Voice Audio Mute Toggle */}
+            <button
+              onClick={handleToggleMute}
+              aria-label={muted ? 'Unmute voice interviewer' : 'Mute voice interviewer'}
+              title={muted ? 'Voice Interviewer Muted (Click to Unmute)' : 'Voice Interviewer Active (Click to Mute)'}
+              className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                muted
+                  ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
-            />
-            <span className="text-[11px] font-mono">
-              {health?.gemini_configured ? health?.model : 'API Ready'}
-            </span>
+            >
+              {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+
+            {/* Settings Button */}
+            <button
+              onClick={() => navigateTo('settings')}
+              aria-label="Settings"
+              title="Candidate Profile & Settings"
+              className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                currentView === 'settings'
+                  ? 'bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700" />
+              )}
+            </button>
+
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              className="p-2 rounded-xl lg:hidden text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
 
-          {/* Voice Audio Mute Toggle */}
-          <button
-            onClick={handleToggleMute}
-            aria-label={muted ? 'Unmute voice interviewer' : 'Mute voice interviewer'}
-            title={muted ? 'Voice Interviewer Muted (Click to Unmute)' : 'Voice Interviewer Active (Click to Mute)'}
-            className={`p-2 rounded-xl transition-colors cursor-pointer ${
-              muted
-                ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
-
-          {/* Settings */}
-          <button
-            onClick={() => setCurrentView('settings')}
-            aria-label="Settings"
-            title="Candidate Profile & Settings"
-            className={`p-2 rounded-xl transition-colors ${
-              currentView === 'settings'
-                ? 'bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400'
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-slate-700" />
-            )}
-          </button>
         </div>
 
-      </div>
-    </header>
+        {/* Mobile Dropdown Drawer */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl px-4 py-3 space-y-1 shadow-2xl animate-in slide-in-from-top-2 duration-200">
+            <button
+              onClick={() => navigateTo('home')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                currentView === 'home'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              <span>Home Dashboard</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('setup')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                isPracticeActive && !isDsaActive && !isCoreActive && !isProjectActive
+                  ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-indigo-500" />
+              <span>General Speaking Practice</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('projects')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                isProjectActive
+                  ? 'bg-teal-50 dark:bg-teal-950/70 text-teal-600 dark:text-teal-400 font-bold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <FolderGit2 className="w-4 h-4 text-teal-500" />
+              <span>My Projects & Architecture</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('dsa_setup')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                isDsaActive
+                  ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 font-bold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Code2 className="w-4 h-4 text-emerald-500" />
+              <span>DSA Oral Interview</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('core_setup')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                isCoreActive
+                  ? 'bg-purple-50 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 font-bold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <BookOpen className="w-4 h-4 text-purple-500" />
+              <span>CS Core Fundamentals</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('dsa_journey')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                isJourneyActive
+                  ? 'bg-sky-50 dark:bg-sky-950/70 text-sky-600 dark:text-sky-400 font-bold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Compass className="w-4 h-4 text-sky-500" />
+              <span>DSA Journey Stats</span>
+            </button>
+
+            <button
+              onClick={() => navigateTo('progress')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                isProgressActive
+                  ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Activity className="w-4 h-4 text-indigo-500" />
+              <span>Progress & Readiness</span>
+            </button>
+
+            <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => navigateTo('settings')}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  currentView === 'settings'
+                    ? 'bg-teal-50 dark:bg-teal-950/70 text-teal-600 dark:text-teal-400 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Settings className="w-4 h-4 text-slate-500" />
+                <span>Profile & Settings</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Fixed Mobile Bottom Navigation Bar (Optimized for One-Handed Thumb Use) */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800/90 flex items-center justify-around px-1 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.3)] transition-colors"
+      >
+        <button
+          onClick={() => navigateTo('home')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer ${
+            currentView === 'home'
+              ? 'text-indigo-600 dark:text-indigo-400 font-bold scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Home className="w-4 h-4" />
+          <span className="text-[10px] mt-0.5">Home</span>
+        </button>
+
+        <button
+          onClick={() => navigateTo('setup')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer ${
+            isPracticeActive && !isDsaActive && !isCoreActive && !isProjectActive
+              ? 'text-indigo-600 dark:text-indigo-400 font-bold scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span className="text-[10px] mt-0.5">Drill</span>
+        </button>
+
+        <button
+          onClick={() => navigateTo('projects')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer ${
+            isProjectActive
+              ? 'text-teal-600 dark:text-teal-400 font-bold scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <FolderGit2 className="w-4 h-4" />
+          <span className="text-[10px] mt-0.5">Projects</span>
+        </button>
+
+        <button
+          onClick={() => navigateTo('dsa_setup')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer ${
+            isDsaActive
+              ? 'text-emerald-600 dark:text-emerald-400 font-bold scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Code2 className="w-4 h-4" />
+          <span className="text-[10px] mt-0.5">DSA</span>
+        </button>
+
+        <button
+          onClick={() => navigateTo('core_setup')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer ${
+            isCoreActive
+              ? 'text-purple-600 dark:text-purple-400 font-bold scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          <span className="text-[10px] mt-0.5">Core</span>
+        </button>
+
+        <button
+          onClick={() => navigateTo('progress')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer ${
+            isProgressActive
+              ? 'text-indigo-600 dark:text-indigo-400 font-bold scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+          <span className="text-[10px] mt-0.5">Progress</span>
+        </button>
+      </nav>
+    </>
   );
 }

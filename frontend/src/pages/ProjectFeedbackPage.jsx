@@ -41,9 +41,9 @@ export default function ProjectFeedbackPage({
   const scoreBarWidth = (val) => `${Math.min(Math.max((val / 10) * 100, 0), 100)}%`;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8 animate-fade-in">
       {/* Top Banner / Question Context */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
+      <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900/50">
             <FolderGit2 className="w-3.5 h-3.5" />
@@ -62,7 +62,7 @@ export default function ProjectFeedbackPage({
           )}
         </div>
 
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-snug">
+        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-snug break-words">
           "{questionData?.question || 'Interview Question'}"
         </h2>
       </div>
@@ -75,13 +75,13 @@ export default function ProjectFeedbackPage({
       {/* Main Grid: Overall Score & Dimensions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {/* Overall Score Card */}
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white shadow-lg flex flex-col justify-between">
+        <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white shadow-lg flex flex-col justify-between">
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-teal-400 mb-1">
               Overall Performance
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black tracking-tight">
+              <span className="text-4xl sm:text-5xl font-black tracking-tight">
                 {analysis.overall_score?.toFixed(1) || '0.0'}
               </span>
               <span className="text-sm font-semibold text-slate-400">/ 10</span>
@@ -102,7 +102,7 @@ export default function ProjectFeedbackPage({
         </div>
 
         {/* 5 Core Dimension Scores */}
-        <div className="md:col-span-2 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="md:col-span-2 p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
             Evaluation Dimensions
           </h3>
@@ -327,12 +327,12 @@ export default function ProjectFeedbackPage({
 
       {/* Chained Follow-Up Section (Up to 3 rounds) */}
       {chainCount < 3 && questionData?.follow_up_question && (
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-900 to-slate-900 text-white shadow-xl mb-6">
+        <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-indigo-900 to-slate-900 text-white shadow-xl mb-6">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-400 mb-2">
             <RotateCcw className="w-4 h-4" />
             Interviewer Follow-Up Drill (Round {chainCount + 2} of 3)
           </div>
-          <h3 className="text-lg font-bold text-white mb-2">
+          <h3 className="text-base sm:text-lg font-bold text-white mb-2">
             "{questionData.follow_up_question}"
           </h3>
           <p className="text-xs text-slate-300 mb-5">
@@ -342,7 +342,7 @@ export default function ProjectFeedbackPage({
           <button
             onClick={() => onStartFollowUp(questionData.follow_up_question)}
             disabled={isLoadingFollowUp}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold text-xs shadow-md transition active:scale-95 disabled:opacity-50"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold text-xs shadow-md transition active:scale-95 disabled:opacity-50"
           >
             <Play className="w-4 h-4 fill-current" />
             Answer Follow-Up Question
@@ -351,10 +351,10 @@ export default function ProjectFeedbackPage({
       )}
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
         <button
           onClick={onPracticeAgain}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
         >
           <RotateCcw className="w-4 h-4" />
           Practice Another Project Angle
@@ -362,7 +362,7 @@ export default function ProjectFeedbackPage({
 
         <button
           onClick={onDone}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-sm transition active:scale-95"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-sm transition active:scale-95 text-center"
         >
           Done & View Home
           <ArrowRight className="w-4 h-4" />

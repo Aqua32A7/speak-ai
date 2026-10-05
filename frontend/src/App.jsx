@@ -685,7 +685,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-24 lg:pb-12">
         {currentView === 'home' && (
           <HomePage
             stats={stats}

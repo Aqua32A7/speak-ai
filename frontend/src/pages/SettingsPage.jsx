@@ -153,17 +153,17 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8 animate-fade-in">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-900/50 mb-3">
           <Settings className="w-3.5 h-3.5" />
           Settings & Candidate Profile
         </div>
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Candidate Profile & Preferences
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Customize how Gemini calibrates questions, tone, and feedback for your background.
         </p>
       </div>
@@ -176,9 +176,9 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
       )}
 
       {/* Main Settings Form */}
-      <form onSubmit={handleSaveProfile} className="space-y-8">
+      <form onSubmit={handleSaveProfile} className="space-y-6 sm:space-y-8">
         {/* Profile Section */}
-        <div className="p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="p-4 sm:p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
               <User className="w-5 h-5" />
@@ -323,7 +323,7 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
         </div>
 
         {/* Voice Interviewer Settings */}
-        <div className="p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+        <div className="p-4 sm:p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
               <Volume2 className="w-5 h-5" />
@@ -472,7 +472,7 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
         </div>
 
         {/* Practice Preferences */}
-        <div className="p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="p-4 sm:p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <Layers className="w-5 h-5" />
@@ -512,7 +512,7 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-600 hover:to-indigo-700 text-white font-semibold shadow-md transition active:scale-95"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-600 hover:to-indigo-700 text-white font-semibold shadow-md transition active:scale-95"
           >
             <Save className="w-4 h-4" />
             Save Profile & Preferences
@@ -521,7 +521,7 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
       </form>
 
       {/* Storage & Privacy (Danger Zone) */}
-      <div className="mt-12 p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-950/60 shadow-sm">
+      <div className="mt-8 sm:mt-12 p-4 sm:p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-950/60 shadow-sm">
         <div className="flex items-center gap-3 mb-4 pb-4 border-b border-rose-100 dark:border-rose-950/40">
           <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400">
             <ShieldCheck className="w-5 h-5" />
@@ -536,28 +536,28 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
-            <div className="text-lg font-extrabold text-slate-900 dark:text-white">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
+          <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
+            <div className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
               {sessionCount}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Practice Drills</div>
+            <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Practice Drills</div>
           </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
-            <div className="text-lg font-extrabold text-slate-900 dark:text-white">
+          <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
+            <div className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
               {projectCount}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Saved Projects</div>
+            <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Saved Projects</div>
           </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
-            <div className="text-lg font-extrabold text-slate-900 dark:text-white">
+          <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
+            <div className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
               {platformCount}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">DSA Platforms</div>
+            <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">DSA Platforms</div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40">
           <div>
             <div className="text-sm font-bold text-rose-900 dark:text-rose-200">
               Clear All My Data
@@ -569,7 +569,7 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
           <button
             type="button"
             onClick={() => setShowClearConfirm(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition active:scale-95 shrink-0"
+            className="self-start sm:self-auto flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition active:scale-95 shrink-0"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Clear Data
@@ -579,29 +579,29 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
 
       {/* Confirmation Modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6">
             <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 mb-3">
-              <AlertTriangle className="w-6 h-6" />
+              <AlertTriangle className="w-6 h-6 shrink-0" />
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 Clear All Data?
               </h3>
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-6">
               This will permanently delete all candidate profile details, saved project briefs, drill session transcripts, and DSA journey stats stored in your browser. This action cannot be undone.
             </p>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-wrap justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setShowClearConfirm(false)}
-                className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmClear}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-sm"
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-semibold shadow-sm"
               >
                 Yes, Clear Everything
               </button>

@@ -39,7 +39,7 @@ export default function TimerRing({
     <div className="flex flex-col items-center justify-center">
       <div className="relative flex items-center justify-center">
         {/* SVG Circular Progress */}
-        <svg width={size} height={size} className="transform -rotate-90">
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-44 h-44 sm:w-56 sm:h-56 transform -rotate-90">
           {/* Background circle track */}
           <circle
             cx={size / 2}
@@ -69,17 +69,17 @@ export default function TimerRing({
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none">
           {phase === 'READING_QUESTION' ? (
             <div className="flex flex-col items-center justify-center">
-              <Volume2 className="w-12 h-12 text-violet-600 dark:text-violet-400 animate-pulse" />
-              <span className="text-xs font-semibold tracking-wider uppercase mt-2 text-violet-600 dark:text-violet-400">
+              <Volume2 className="w-10 h-10 sm:w-12 sm:h-12 text-violet-600 dark:text-violet-400 animate-pulse" />
+              <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase mt-2 text-violet-600 dark:text-violet-400">
                 Listening
               </span>
             </div>
           ) : (
             <>
-              <span className="text-4xl sm:text-5xl font-extrabold tracking-tighter font-mono text-slate-900 dark:text-white">
+              <span className="text-3xl sm:text-5xl font-extrabold tracking-tighter font-mono text-slate-900 dark:text-white">
                 {formattedTime}
               </span>
-              <span className="text-xs font-semibold tracking-wider uppercase mt-1 text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase mt-1 text-slate-500 dark:text-slate-400">
                 {phase === 'PREPARING' ? 'Get Ready' : 'Speak Now'}
               </span>
             </>

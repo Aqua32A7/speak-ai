@@ -108,12 +108,12 @@ export default function VoiceFeedbackPlayer({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
           {summaryText && (
             <button
               type="button"
               onClick={handleToggleSummary}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+              className={`flex-1 sm:flex-initial justify-center px-3.5 py-2 sm:py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
                 isSpeaking && playingTarget === 'summary'
                   ? 'bg-rose-600 hover:bg-rose-700 text-white'
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white'
@@ -137,7 +137,7 @@ export default function VoiceFeedbackPlayer({
             <button
               type="button"
               onClick={handleToggleSample}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border ${
+              className={`flex-1 sm:flex-initial justify-center px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border ${
                 isSpeaking && playingTarget === 'sample'
                   ? 'bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800'
                   : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'

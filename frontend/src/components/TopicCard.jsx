@@ -41,12 +41,12 @@ export default function TopicCard({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 transition-colors duration-200 space-y-4">
+    <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-8 transition-colors duration-200 space-y-4">
       {/* Decorative top accent gradient */}
       <div className={`absolute top-0 left-0 right-0 h-1.5 ${getGradient()}`} />
 
       {/* Meta tags */}
-      <div className="flex flex-wrap items-center gap-2.5">
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
         {isProject && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800/60">
             <Tag className="w-3 h-3" />
@@ -145,8 +145,8 @@ export default function TopicCard({
       )}
 
       {/* Main topic statement + Audio Button */}
-      <div className="flex items-start justify-between gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-snug">
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
+        <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-snug break-words">
           {topic || 'Loading interview speaking drill...'}
         </h2>
         {onSpeakQuestion && !disableAudio && topic && (

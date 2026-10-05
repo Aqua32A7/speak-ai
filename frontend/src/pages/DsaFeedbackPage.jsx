@@ -41,21 +41,21 @@ export default function DsaFeedbackPage({
   const isMaxFollowUps = chainCount >= 3;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8 animate-in fade-in duration-300">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-5 sm:space-y-8 animate-in fade-in duration-300">
       
       {/* Workflow Step Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/60 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-        <span className="flex items-center gap-1.5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/60 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+        <span className="flex items-center gap-1.5 text-[11px] sm:text-xs">
           <Terminal className="w-3.5 h-3.5 text-emerald-600" />
           <span>DSA DRILL</span> ➔ <span>SPOKEN ANSWER</span> ➔ <strong className="underline underline-offset-4">DETAILED EVALUATION</strong>
         </span>
-        <span className="text-[11px] font-mono">
+        <span className="text-[10px] sm:text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
           Round {chainCount} of 3 • {analysis.duration_seconds}s • {analysis.word_count} words
         </span>
       </div>
 
       {/* Hero Score Header */}
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center gap-6 sm:gap-8 justify-between">
+      <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center gap-5 sm:gap-8 justify-between">
         <div className="space-y-2 text-center sm:text-left">
           <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
             <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
@@ -72,7 +72,7 @@ export default function DsaFeedbackPage({
             </span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">
+          <h2 className="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight break-words">
             {topicData?.topic}
           </h2>
 
@@ -86,11 +86,11 @@ export default function DsaFeedbackPage({
 
         {/* Big Overall Score Circle */}
         <div className="flex flex-col items-center shrink-0">
-          <div className={`w-28 h-28 rounded-3xl bg-gradient-to-tr ${getScoreBadgeColor(analysis.overall_score)} flex flex-col items-center justify-center shadow-lg shadow-emerald-500/20`}>
-            <span className="text-3xl sm:text-4xl font-extrabold font-mono tracking-tight">
+          <div className={`w-20 h-20 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-gradient-to-tr ${getScoreBadgeColor(analysis.overall_score)} flex flex-col items-center justify-center shadow-lg shadow-emerald-500/20`}>
+            <span className="text-2xl sm:text-4xl font-extrabold font-mono tracking-tight">
               {analysis.overall_score.toFixed(1)}
             </span>
-            <span className="text-[11px] font-bold uppercase tracking-wider opacity-85">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider opacity-85">
               out of 10
             </span>
           </div>
@@ -321,7 +321,7 @@ export default function DsaFeedbackPage({
       )}
 
       {/* Chained Follow-up Round Card */}
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 shadow-md border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 sm:p-8 shadow-md border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6">
         <div className="space-y-2 text-center sm:text-left">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-emerald-300">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
@@ -330,7 +330,7 @@ export default function DsaFeedbackPage({
 
           {topicData?.follow_up_question ? (
             <>
-              <h3 className="text-lg sm:text-xl font-bold tracking-tight">
+              <h3 className="text-base sm:text-xl font-bold tracking-tight">
                 "{topicData.follow_up_question}"
               </h3>
               <p className="text-xs text-slate-300/80">
@@ -354,24 +354,24 @@ export default function DsaFeedbackPage({
         {!isMaxFollowUps && topicData?.follow_up_question ? (
           <button
             onClick={() => onStartFollowUp(topicData.follow_up_question)}
-            className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition-all shrink-0 flex items-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition-all shrink-0 flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>Answer Follow-up (60s)</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         ) : isMaxFollowUps ? (
-          <span className="px-4 py-2 rounded-xl bg-slate-800 text-slate-400 text-xs font-mono shrink-0">
+          <span className="w-full sm:w-auto text-center px-4 py-2 rounded-xl bg-slate-800 text-slate-400 text-xs font-mono shrink-0">
             Max 3 Rounds Finished
           </span>
         ) : null}
       </div>
 
       {/* Footer Navigation Actions */}
-      <div className="pt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-3">
+      <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <button
             onClick={onTryAgain}
-            className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm transition-colors flex items-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
             <span>Try Again (Same Question)</span>
@@ -379,7 +379,7 @@ export default function DsaFeedbackPage({
 
           <button
             onClick={onNewQuestion}
-            className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-md transition-colors flex items-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <Terminal className="w-4 h-4" />
             <span>Next DSA Question</span>
@@ -388,7 +388,7 @@ export default function DsaFeedbackPage({
 
         <button
           onClick={onFinish}
-          className="px-5 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+          className="w-full sm:w-auto px-5 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-center"
         >
           <span>View DSA Progress</span>
           <ArrowRight className="w-4 h-4" />

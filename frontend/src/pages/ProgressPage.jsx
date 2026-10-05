@@ -65,7 +65,7 @@ export default function ProgressPage({
   const weakestCoreSubtopics = coreStats?.weakest_subtopics || [];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-10 animate-in fade-in duration-200">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6 sm:space-y-10 animate-in fade-in duration-200">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -73,15 +73,15 @@ export default function ProgressPage({
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Your Progress & Interview Readiness
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Track metrics across your 60-second drills, improve fluency, and eliminate verbal fillers.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={onStartPractice}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            className="flex-1 sm:flex-initial justify-center px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>General Drill</span>
@@ -89,7 +89,7 @@ export default function ProgressPage({
 
           <button
             onClick={onStartDsaPractice}
-            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            className="flex-1 sm:flex-initial justify-center px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Terminal className="w-3.5 h-3.5" />
             <span>DSA Drill</span>
@@ -97,7 +97,7 @@ export default function ProgressPage({
 
           <button
             onClick={onStartCorePractice}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            className="flex-1 sm:flex-initial justify-center px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span>CS Core Drill</span>
@@ -105,7 +105,7 @@ export default function ProgressPage({
 
           <button
             onClick={onStartProjectPractice}
-            className="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            className="flex-1 sm:flex-initial justify-center px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <FolderGit2 className="w-3.5 h-3.5" />
             <span>Project Drill</span>
@@ -614,7 +614,7 @@ export default function ProgressPage({
           </h2>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs">
             <button
               onClick={() => setHistoryFilter('all')}
               className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${

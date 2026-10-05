@@ -20,13 +20,13 @@ export default function HomePage({
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12 animate-fade-in">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-12 space-y-8 sm:space-y-12 animate-fade-in">
       {/* Hero section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 text-white p-8 sm:p-12 shadow-xl border border-indigo-700/40">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 text-white p-5 sm:p-12 shadow-xl border border-indigo-700/40">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-80 h-80 rounded-full bg-violet-500/10 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl space-y-6">
+        <div className="relative z-10 max-w-3xl space-y-4 sm:space-y-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-indigo-200 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>Spoken Technical Interview Preparation</span>
@@ -36,15 +36,15 @@ export default function HomePage({
             SpeakPrep AI
           </h1>
 
-          <p className="text-base sm:text-xl text-indigo-100/90 font-normal leading-relaxed">
+          <p className="text-xs sm:text-xl text-indigo-100/90 font-normal leading-relaxed">
             Practice speaking. Build confidence. Get interview-ready.
             Master technical explanations, DSA intuition, project architecture, and CS fundamentals through structured 60-second drills with real-time Gemini AI coaching.
           </p>
 
-          <div className="pt-2 flex flex-wrap items-center gap-3">
+          <div className="pt-2 flex flex-wrap items-center gap-2.5 sm:gap-3">
             <button
               onClick={onStartPractice}
-              className="px-5 py-3 rounded-2xl bg-white text-indigo-900 font-bold text-sm shadow-lg hover:bg-indigo-50 active:scale-95 transition-all flex items-center gap-2 group cursor-pointer"
+              className="flex-1 min-w-[130px] sm:flex-initial justify-center px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-white text-indigo-900 font-bold text-xs sm:text-sm shadow-lg hover:bg-indigo-50 active:scale-95 transition-all flex items-center gap-2 group cursor-pointer"
             >
               <Play className="w-4 h-4 fill-indigo-900 group-hover:scale-110 transition-transform" />
               <span>General Practice</span>
@@ -52,23 +52,23 @@ export default function HomePage({
 
             <button
               onClick={onStartProjectPractice}
-              className="px-5 py-3 rounded-2xl bg-teal-500 hover:bg-teal-400 active:scale-95 text-slate-950 font-bold text-sm shadow-lg shadow-teal-500/20 transition-all flex items-center gap-2 cursor-pointer"
+              className="flex-1 min-w-[130px] sm:flex-initial justify-center px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-teal-500 hover:bg-teal-400 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-teal-500/20 transition-all flex items-center gap-2 cursor-pointer"
             >
               <FolderGit2 className="w-4 h-4" />
-              <span>Project Interview</span>
+              <span>Project Drill</span>
             </button>
 
             <button
               onClick={onStartDsaPractice}
-              className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer"
+              className="flex-1 min-w-[130px] sm:flex-initial justify-center px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer"
             >
               <Code2 className="w-4 h-4 stroke-[2.5]" />
-              <span>DSA Interview</span>
+              <span>DSA Drill</span>
             </button>
 
             <button
               onClick={onStartCorePractice}
-              className="px-5 py-3 rounded-2xl bg-purple-500 hover:bg-purple-400 active:scale-95 text-white font-bold text-sm shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2 cursor-pointer"
+              className="flex-1 min-w-[120px] sm:flex-initial justify-center px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-purple-500 hover:bg-purple-400 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2 cursor-pointer"
             >
               <BookOpen className="w-4 h-4 stroke-[2.5]" />
               <span>CS Core</span>
@@ -76,7 +76,7 @@ export default function HomePage({
 
             <button
               onClick={onViewProgress}
-              className="px-4 py-3 rounded-2xl bg-indigo-950/60 hover:bg-indigo-950/90 text-white font-semibold text-sm border border-indigo-400/30 transition-all flex items-center gap-2 cursor-pointer"
+              className="flex-1 min-w-[120px] sm:flex-initial justify-center px-4 py-2.5 sm:py-3 rounded-2xl bg-indigo-950/60 hover:bg-indigo-950/90 text-white font-semibold text-xs sm:text-sm border border-indigo-400/30 transition-all flex items-center gap-2 cursor-pointer"
             >
               <span>Readiness</span>
               <ArrowRight className="w-4 h-4" />
@@ -86,9 +86,9 @@ export default function HomePage({
       </div>
 
       {/* Feature Grid: Projects + DSA + CS Core */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {/* Project Interview Spotlight Card */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-teal-950 text-white p-6 border border-teal-500/30 shadow-xl flex flex-col justify-between space-y-6">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-teal-950 text-white p-4 sm:p-6 border border-teal-500/30 shadow-xl flex flex-col justify-between space-y-6">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 text-xs font-semibold">
               <FolderGit2 className="w-3.5 h-3.5" />
@@ -125,7 +125,7 @@ export default function HomePage({
         </div>
 
         {/* DSA Interview Mode Spotlight Card */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950 text-white p-6 border border-emerald-500/30 shadow-xl flex flex-col justify-between space-y-6">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950 text-white p-4 sm:p-6 border border-emerald-500/30 shadow-xl flex flex-col justify-between space-y-6">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
               <Terminal className="w-3.5 h-3.5" />
@@ -163,7 +163,7 @@ export default function HomePage({
         </div>
 
         {/* CS Core Fundamentals Mode Card */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-purple-950 text-white p-6 border border-purple-500/30 shadow-xl flex flex-col justify-between space-y-6">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-purple-950 text-white p-4 sm:p-6 border border-purple-500/30 shadow-xl flex flex-col justify-between space-y-6">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold">
               <BookOpen className="w-3.5 h-3.5" />
@@ -206,7 +206,7 @@ export default function HomePage({
           </span>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           <StatCard
             title="Drills Completed"
             value={today.sessions_completed}
@@ -242,7 +242,7 @@ export default function HomePage({
       </div>
 
       {/* How it works 4-step workflow */}
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-6">
+      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-8 space-y-6">
         <div>
           <h3 className="text-base font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-xs">
             How The 60-Second Drill Works
@@ -252,7 +252,7 @@ export default function HomePage({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2">
             <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-xs">
               1

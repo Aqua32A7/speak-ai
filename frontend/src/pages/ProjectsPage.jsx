@@ -206,33 +206,33 @@ export default function ProjectsPage({ onStartProjectInterview }) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 animate-fade-in">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900/50 mb-3">
             <FolderGit2 className="w-3.5 h-3.5" />
             My Projects Portfolio
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             My Technical Projects
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Connect public GitHub repositories or enter project highlights to practice real-world architecture drills.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
           <button
             onClick={openGithubModal}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-semibold shadow-sm transition active:scale-95"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-semibold shadow-sm transition active:scale-95"
           >
             <GithubIcon className="w-4 h-4" />
             + Add via GitHub
           </button>
           <button
             onClick={openManualModal}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-sm transition active:scale-95"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-sm transition active:scale-95"
           >
             <FileText className="w-4 h-4" />
             + Add Manually
@@ -242,27 +242,27 @@ export default function ProjectsPage({ onStartProjectInterview }) {
 
       {/* Projects List */}
       {projects.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 shadow-sm">
+        <div className="p-6 sm:p-12 text-center rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 shadow-sm">
           <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mx-auto mb-4">
             <FolderGit2 className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-2">
             No projects added yet
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
             Paste a public GitHub repository link or describe your project manually. Gemini will summarize it into an interview brief to test your technical choices and architectural ownership.
           </p>
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-center gap-2.5 sm:gap-3">
             <button
               onClick={openGithubModal}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-slate-800 hover:bg-black rounded-lg transition"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 dark:bg-slate-800 hover:bg-black rounded-xl transition"
             >
               <GithubIcon className="w-4 h-4" />
               Analyze GitHub Repo
             </button>
             <button
               onClick={openManualModal}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-xl transition"
             >
               <FileText className="w-4 h-4" />
               Fill In Manually
@@ -270,11 +270,11 @@ export default function ProjectsPage({ onStartProjectInterview }) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {projects.map((proj) => (
             <div
               key={proj.id}
-              className="flex flex-col justify-between p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-teal-500/50 dark:hover:border-teal-500/50 transition group"
+              className="flex flex-col justify-between p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-teal-500/50 dark:hover:border-teal-500/50 transition group"
             >
               <div>
                 {/* Badge & Title */}
@@ -367,12 +367,12 @@ export default function ProjectsPage({ onStartProjectInterview }) {
 
       {/* Modal: Add via GitHub */}
       {modalMode === 'github' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
                 <GithubIcon className="w-5 h-5 text-slate-900 dark:text-white" />
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   Add Project from GitHub
                 </h3>
               </div>
@@ -424,7 +424,7 @@ export default function ProjectsPage({ onStartProjectInterview }) {
                 />
               </div>
 
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-wrap justify-end gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={closeModal}
@@ -458,12 +458,12 @@ export default function ProjectsPage({ onStartProjectInterview }) {
 
       {/* Modal: Add Manually */}
       {modalMode === 'manual' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
                 <FileText className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   Add Project Details Manually
                 </h3>
               </div>
@@ -555,7 +555,7 @@ export default function ProjectsPage({ onStartProjectInterview }) {
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-3">
+              <div className="flex flex-wrap justify-end gap-2 sm:gap-3 pt-3">
                 <button
                   type="button"
                   onClick={closeModal}
@@ -589,11 +589,11 @@ export default function ProjectsPage({ onStartProjectInterview }) {
 
       {/* Modal: Review & Edit Project Brief */}
       {modalMode === 'edit' && editingBrief && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 md:p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 md:p-8">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                   {isEditingExisting ? 'Edit Project Brief' : 'Review & Confirm Project Brief'}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -718,7 +718,7 @@ export default function ProjectsPage({ onStartProjectInterview }) {
               )}
             </div>
 
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex flex-wrap justify-end gap-2 sm:gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setModalMode(null)}

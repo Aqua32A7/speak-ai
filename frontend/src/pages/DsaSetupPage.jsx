@@ -77,7 +77,7 @@ export default function DsaSetupPage({ onGenerateQuestion, isLoading, error, onC
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8 animate-in fade-in duration-200">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in fade-in duration-200">
       <div>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold mb-3">
           <Terminal className="w-3.5 h-3.5" />
@@ -108,7 +108,7 @@ export default function DsaSetupPage({ onGenerateQuestion, isLoading, error, onC
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={handleSelectWeakTopicDrill}
