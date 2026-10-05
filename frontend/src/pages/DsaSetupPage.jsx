@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Terminal, Code2, Sparkles, Sliders, ArrowRight, Check, Cpu, Brain, Compass, Target } from 'lucide-react';
 import ErrorBanner from '../components/ErrorBanner';
-import { getDsaJourneyBrief, getDsaJourneyData } from '../services/storage';
+import { getDsaJourneyBrief, getDsaJourneyData, getUserProfile } from '../services/storage';
 
 const SUBTOPICS = [
   'Surprise Me',
@@ -137,13 +137,16 @@ export default function DsaSetupPage({ onGenerateQuestion, isLoading, error, onC
           </div>
           <div className="space-y-1 text-xs">
             <div className="font-bold text-slate-100 flex items-center gap-2">
-              <span>Interview Calibration: 400+ Problems / C++ Context</span>
+              <span>
+                Interview Calibration: {getUserProfile()?.languages?.length ? getUserProfile().languages.join(', ') : 'Algorithmic'} Context
+                {getUserProfile()?.target_role ? ` (${getUserProfile().target_role})` : ''}
+              </span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono">
                 Oral Only
               </span>
             </div>
             <p className="text-slate-300/90 leading-relaxed">
-              Gemini tailors technical rigor to someone who already knows the algorithms and evaluates how fluently you convey logic to an interviewer in under 60 seconds.
+              Gemini evaluates how fluently and clearly you convey algorithmic intuition, complexity, and trade-offs to an interviewer in under 60 seconds.
             </p>
           </div>
         </div>

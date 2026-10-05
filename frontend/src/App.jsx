@@ -10,6 +10,11 @@ import DsaFeedbackPage from './pages/DsaFeedbackPage';
 import CoreFeedbackPage from './pages/CoreFeedbackPage';
 import DsaJourneyPage from './pages/DsaJourneyPage';
 import ProgressPage from './pages/ProgressPage';
+import ProjectsPage from './pages/ProjectsPage';
+import ProjectSetupPage from './pages/ProjectSetupPage';
+import ProjectFeedbackPage from './pages/ProjectFeedbackPage';
+import SettingsPage from './pages/SettingsPage';
+import OnboardingModal from './components/OnboardingModal';
 
 import {
   fetchHealth,
@@ -22,6 +27,9 @@ import {
   fetchCoreQuestion,
   analyzeCoreAnswer,
   fetchCoreFollowUp,
+  fetchProjectQuestion,
+  analyzeProjectAnswer,
+  fetchProjectFollowUp,
 } from './services/api';
 import {
   getSessions,
@@ -29,9 +37,14 @@ import {
   getRecentTopics,
   getRecentDsaQuestions,
   getRecentCoreQuestions,
+  getRecentProjectQuestions,
   getStats,
   getDsaStats,
   getCoreStats,
+  getProjectStats,
+  getUserProjects,
+  getUserProfile,
+  isOnboardingCompleted,
   getInterviewReadiness,
   getDsaJourneyBrief,
   getStoredTheme,
@@ -40,7 +53,7 @@ import {
 import { useSpeechRecognition } from './services/useSpeechRecognition';
 
 export default function App() {
-  // Navigation: 'home' | 'setup' | 'practice' | 'feedback' | 'progress' | 'dsa_setup' | 'dsa_practice' | 'dsa_feedback' | 'core_setup' | 'core_practice' | 'core_feedback' | 'dsa_journey'
+  // Navigation: 'home' | 'setup' | 'practice' | 'feedback' | 'progress' | 'dsa_setup' | 'dsa_practice' | 'dsa_feedback' | 'core_setup' | 'core_practice' | 'core_feedback' | 'dsa_journey' | 'projects' | 'project_setup' | 'project_practice' | 'project_feedback' | 'settings'
   const [currentView, setCurrentView] = useState('home');
 
   // Theme
@@ -48,6 +61,9 @@ export default function App() {
 
   // Health state
   const [health, setHealth] = useState(null);
+
+  // Onboarding Modal
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Practice state
   const [activeTopic, setActiveTopic] = useState(null);
@@ -57,13 +73,16 @@ export default function App() {
   const [topicError, setTopicError] = useState(null);
   const [analysisError, setAnalysisError] = useState(null);
 
-  // DSA Interview Mode State
+  // Interview Mode States
   const [dsaChainCount, setDsaChainCount] = useState(1);
+  const [projectChainCount, setProjectChainCount] = useState(0);
+  const [selectedProjectForDrill, setSelectedProjectForDrill] = useState(null);
 
   // Storage state
   const [stats, setStats] = useState(getStats);
   const [dsaStats, setDsaStats] = useState(getDsaStats);
   const [coreStats, setCoreStats] = useState(getCoreStats);
+  const [projectStats, setProjectStats] = useState(getProjectStats);
   const [readiness, setReadiness] = useState(getInterviewReadiness);
   const [sessions, setSessions] = useState(getSessions);
 
@@ -84,6 +103,13 @@ export default function App() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  // Check first-time onboarding
+  useEffect(() => {
+    if (!isOnboardingCompleted()) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
   // Check backend health on mount
   useEffect(() => {
     fetchHealth()
@@ -99,17 +125,18 @@ export default function App() {
     setStats(getStats());
     setDsaStats(getDsaStats());
     setCoreStats(getCoreStats());
+    setProjectStats(getProjectStats());
     setReadiness(getInterviewReadiness());
     setSessions(getSessions());
   }, []);
 
   // Generate general topic from Gemini
-  const handleGenerateTopic = async ({ difficulty, categoryFilter }) => {
+  const handleGenerateTopic = async ({ difficulty, categoryFilter, projectBrief = null }) => {
     setIsGeneratingTopic(true);
     setTopicError(null);
     try {
       const recentTopics = getRecentTopics(15);
-      const data = await fetchTopic(difficulty, categoryFilter, recentTopics);
+      const data = await fetchTopic(difficulty, categoryFilter, recentTopics, projectBrief);
       setActiveTopic({
         topic: data.topic,
         category: data.category,
@@ -225,7 +252,59 @@ export default function App() {
     }
   };
 
-  // Submit drill to Gemini for analysis (General, DSA, or CS Core)
+  // Generate Project interview question from Gemini
+  const handleStartProjectDrillFromSetup = async ({ project, difficulty, questionType }) => {
+    setIsGeneratingTopic(true);
+    setTopicError(null);
+    try {
+      const recentQuestions = getRecentProjectQuestions(15);
+      const data = await fetchProjectQuestion({
+        projectBrief: project,
+        difficulty,
+        recentQuestions,
+        questionType,
+      });
+
+      setActiveTopic({
+        topic: data.question,
+        question_type: data.question_type || questionType,
+        difficulty: data.difficulty || difficulty,
+        key_points: data.key_points || [],
+        follow_up_question: data.follow_up_question,
+        project_brief: project,
+        project_id: project.id,
+        project_name: project.name,
+        mode: 'project',
+        parentSessionId: null,
+        roundNumber: 1,
+      });
+      setSelectedProjectForDrill(project);
+      setProjectChainCount(0);
+      setCurrentView('project_practice');
+    } catch (err) {
+      console.error('Error generating project question:', err);
+      setTopicError(err.message || 'Failed to generate project interview question.');
+    } finally {
+      setIsGeneratingTopic(false);
+    }
+  };
+
+  const handleStartProjectInterview = (proj = null) => {
+    if (proj && proj.id) {
+      setSelectedProjectForDrill(proj);
+      setCurrentView('project_setup');
+      return;
+    }
+    const projects = getUserProjects();
+    if (projects.length > 0) {
+      setSelectedProjectForDrill(projects[0]);
+      setCurrentView('project_setup');
+    } else {
+      setCurrentView('projects');
+    }
+  };
+
+  // Submit drill to Gemini for analysis (General, DSA, CS Core, or Project)
   const handleFinishDrill = async ({
     topic,
     transcript,
@@ -243,11 +322,71 @@ export default function App() {
     setIsLoadingAnalysis(true);
     setAnalysisError(null);
 
+    const isProject = mode === 'project' || activeTopic?.mode === 'project';
     const isCore = mode === 'core' || activeTopic?.mode === 'core';
     const isDsa = mode === 'dsa' || activeTopic?.mode === 'dsa';
 
     try {
-      if (isCore) {
+      if (isProject) {
+        // Project Interview Drill Analysis
+        const targetBrief = activeTopic?.project_brief || selectedProjectForDrill;
+        const analysisData = await analyzeProjectAnswer({
+          question: topic,
+          questionType: activeTopic?.question_type || questionType || 'Project Architecture',
+          projectBrief: targetBrief,
+          keyPoints: keyPoints.length > 0 ? keyPoints : (activeTopic?.key_points || []),
+          transcript,
+          durationSeconds,
+          timeToFirstWord,
+          longestPause,
+          pausesOver2s,
+          parentSessionId,
+          followUpChainCount: projectChainCount,
+        });
+
+        const saved = saveSession({
+          mode: 'project',
+          topic,
+          project_id: activeTopic?.project_id || targetBrief?.id,
+          project_name: activeTopic?.project_name || targetBrief?.name || 'Project Drill',
+          question_type: activeTopic?.question_type || questionType || 'Project Architecture',
+          difficulty: activeTopic?.difficulty || 'Medium',
+          transcript,
+          duration_seconds: durationSeconds,
+          ...analysisData,
+          parent_session_id: parentSessionId,
+        });
+
+        // Optionally fetch dynamic follow-up for round 2 or 3
+        let nextFollowUp = activeTopic?.follow_up_question || null;
+        if (projectChainCount < 2) {
+          try {
+            const followUpRes = await fetchProjectFollowUp({
+              question: topic,
+              transcript,
+              projectBrief: targetBrief,
+              chainCount: projectChainCount + 1,
+            });
+            if (followUpRes?.follow_up_question) {
+              nextFollowUp = followUpRes.follow_up_question;
+            }
+          } catch (fErr) {
+            console.warn('Could not generate dynamic Project follow-up:', fErr);
+          }
+        }
+
+        setActiveTopic((prev) => ({
+          ...prev,
+          follow_up_question: projectChainCount >= 2 ? null : nextFollowUp,
+        }));
+
+        refreshStorageData();
+        setCurrentAnalysis({
+          ...analysisData,
+          sessionId: saved?.id,
+        });
+        setCurrentView('project_feedback');
+      } else if (isCore) {
         // CS Core Fundamentals Analysis
         const analysisData = await analyzeCoreAnswer({
           question: topic,
@@ -453,10 +592,35 @@ export default function App() {
     setCurrentView('core_practice');
   };
 
+  // Start follow-up round for Project Interview
+  const handleStartProjectFollowUp = (followUpQuestion) => {
+    if (projectChainCount >= 2) return;
+    const nextRound = projectChainCount + 1;
+    setProjectChainCount(nextRound);
+
+    setActiveTopic({
+      topic: followUpQuestion,
+      question_type: 'Architecture Defense & Follow-up',
+      difficulty: activeTopic?.difficulty || 'Medium',
+      key_points: [],
+      follow_up_question: null,
+      project_brief: activeTopic?.project_brief || selectedProjectForDrill,
+      project_id: activeTopic?.project_id || selectedProjectForDrill?.id,
+      project_name: activeTopic?.project_name || selectedProjectForDrill?.name,
+      parentSessionId: currentAnalysis?.sessionId || null,
+      mode: 'project',
+      roundNumber: nextRound + 1,
+    });
+    setCurrentAnalysis(null);
+    setCurrentView('project_practice');
+  };
+
   // Try again with identical topic / question
   const handleTryAgain = () => {
     setCurrentAnalysis(null);
-    if (activeTopic?.mode === 'core') {
+    if (activeTopic?.mode === 'project') {
+      setCurrentView('project_practice');
+    } else if (activeTopic?.mode === 'core') {
       setCurrentView('core_practice');
     } else if (activeTopic?.mode === 'dsa') {
       setCurrentView('dsa_practice');
@@ -499,6 +663,13 @@ export default function App() {
     currentView === 'core_feedback' ||
     activeTopic?.mode === 'core';
 
+  const isCurrentProject =
+    currentView === 'projects' ||
+    currentView === 'project_setup' ||
+    currentView === 'project_practice' ||
+    currentView === 'project_feedback' ||
+    activeTopic?.mode === 'project';
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Navbar */}
@@ -510,6 +681,7 @@ export default function App() {
         health={health}
         isDsaMode={isCurrentDsa}
         isCoreMode={isCurrentCore}
+        isProjectMode={isCurrentProject}
       />
 
       {/* Main Content Area */}
@@ -518,10 +690,39 @@ export default function App() {
           <HomePage
             stats={stats}
             onStartPractice={() => setCurrentView('setup')}
+            onStartProjectPractice={() => handleStartProjectInterview()}
             onStartDsaPractice={() => setCurrentView('dsa_setup')}
             onStartCorePractice={() => setCurrentView('core_setup')}
+            onViewProjects={() => setCurrentView('projects')}
             onViewJourney={() => setCurrentView('dsa_journey')}
             onViewProgress={() => setCurrentView('progress')}
+          />
+        )}
+
+        {/* My Projects Management Hub */}
+        {currentView === 'projects' && (
+          <ProjectsPage
+            onStartProjectInterview={(proj) => {
+              setSelectedProjectForDrill(proj);
+              setCurrentView('project_setup');
+            }}
+          />
+        )}
+
+        {/* Project Setup Page */}
+        {currentView === 'project_setup' && (
+          <ProjectSetupPage
+            initialProject={selectedProjectForDrill}
+            onStartDrill={handleStartProjectDrillFromSetup}
+            onNavigateToProjects={() => setCurrentView('projects')}
+          />
+        )}
+
+        {/* Settings Page */}
+        {currentView === 'settings' && (
+          <SettingsPage
+            onDataCleared={refreshStorageData}
+            onProfileUpdated={refreshStorageData}
           />
         )}
 
@@ -555,8 +756,8 @@ export default function App() {
           />
         )}
 
-        {/* Practice Arena (Used for General, DSA, and CS Core drills) */}
-        {(currentView === 'practice' || currentView === 'dsa_practice' || currentView === 'core_practice') && (
+        {/* Practice Arena (Used for General, DSA, CS Core, and Project drills) */}
+        {(currentView === 'practice' || currentView === 'dsa_practice' || currentView === 'core_practice' || currentView === 'project_practice') && (
           <PracticePage
             topicData={activeTopic}
             speechRecognition={speechRecognition}
@@ -565,7 +766,8 @@ export default function App() {
             analysisError={analysisError}
             onClearAnalysisError={() => setAnalysisError(null)}
             onCancelDrill={() => {
-              if (activeTopic?.mode === 'core') setCurrentView('core_setup');
+              if (activeTopic?.mode === 'project') setCurrentView('project_setup');
+              else if (activeTopic?.mode === 'core') setCurrentView('core_setup');
               else if (activeTopic?.mode === 'dsa') setCurrentView('dsa_setup');
               else setCurrentView('setup');
             }}
@@ -609,6 +811,19 @@ export default function App() {
           />
         )}
 
+        {/* Project Drill Feedback */}
+        {currentView === 'project_feedback' && (
+          <ProjectFeedbackPage
+            analysis={currentAnalysis}
+            questionData={activeTopic}
+            projectBrief={activeTopic?.project_brief || selectedProjectForDrill}
+            onStartFollowUp={handleStartProjectFollowUp}
+            onPracticeAgain={handleTryAgain}
+            onDone={() => setCurrentView('progress')}
+            chainCount={projectChainCount}
+          />
+        )}
+
         {/* DSA Journey & Coding Profile Analysis */}
         {currentView === 'dsa_journey' && (
           <DsaJourneyPage
@@ -623,14 +838,26 @@ export default function App() {
             stats={stats}
             dsaStats={dsaStats}
             coreStats={coreStats}
+            projectStats={projectStats}
             readiness={readiness}
             sessions={sessions}
             onStartPractice={() => setCurrentView('setup')}
+            onStartProjectPractice={() => handleStartProjectInterview()}
             onStartDsaPractice={() => setCurrentView('dsa_setup')}
             onStartCorePractice={() => setCurrentView('core_setup')}
           />
         )}
       </main>
+
+      {/* First-Time Onboarding Modal */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onProfileSaved={() => {
+          refreshStorageData();
+          setShowOnboarding(false);
+        }}
+      />
 
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800/80 py-6 text-center text-xs text-slate-400">

@@ -205,6 +205,8 @@ export default function PracticePage({
         roundNumber={topicData?.roundNumber}
         isDsa={topicData?.mode === 'dsa'}
         isCore={topicData?.mode === 'core'}
+        isProject={topicData?.mode === 'project'}
+        projectName={topicData?.project_name}
         subject={topicData?.subject}
         primer={topicData?.primer}
       />

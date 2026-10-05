@@ -6,6 +6,10 @@
 
 const STORAGE_KEY_SESSIONS = 'speakprep_sessions_v1';
 const STORAGE_KEY_THEME = 'speakprep_theme';
+const STORAGE_KEY_PROFILE = 'speakprep_user_profile_v1';
+const STORAGE_KEY_PROJECTS = 'speakprep_projects_v1';
+const STORAGE_KEY_SETTINGS = 'speakprep_settings_v1';
+const STORAGE_KEY_ONBOARDING = 'speakprep_onboarding_completed';
 
 /**
  * Retrieve all practice sessions ordered newest first
@@ -74,6 +78,12 @@ export function saveSession(session) {
       depth: session.depth || 0,
       examples_and_analogies: session.examples_and_analogies || 0,
       refresher: session.refresher || null,
+      // Project Mode fields
+      project_id: session.project_id || null,
+      project_name: session.project_name || '',
+      ownership_score: session.ownership_score || 0,
+      concrete_details_score: session.concrete_details_score || 0,
+      ownership_feedback: session.ownership_feedback || '',
     };
 
     const updated = [newSession, ...sessions];
@@ -732,3 +742,194 @@ export function getDsaJourneyBrief() {
     recommended_focus_topics: analysis?.recommended_focus_topics || [],
   };
 }
+
+// ============================================================================
+// User Profile Helpers
+// ============================================================================
+
+export function getUserProfile() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PROFILE);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error('Failed to parse user profile:', err);
+    return null;
+  }
+}
+
+export function saveUserProfile(profile) {
+  try {
+    if (!profile) {
+      localStorage.removeItem(STORAGE_KEY_PROFILE);
+      return null;
+    }
+    localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(profile));
+    localStorage.setItem(STORAGE_KEY_ONBOARDING, 'true');
+    return profile;
+  } catch (err) {
+    console.error('Failed to save user profile:', err);
+    return null;
+  }
+}
+
+export function isOnboardingCompleted() {
+  return localStorage.getItem(STORAGE_KEY_ONBOARDING) === 'true';
+}
+
+export function setOnboardingCompleted() {
+  localStorage.setItem(STORAGE_KEY_ONBOARDING, 'true');
+}
+
+// ============================================================================
+// Settings Helpers
+// ============================================================================
+
+export function getSettings() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
+    if (!raw) {
+      return { include_projects_in_random_topics: false };
+    }
+    return JSON.parse(raw);
+  } catch (err) {
+    return { include_projects_in_random_topics: false };
+  }
+}
+
+export function saveSettings(settings) {
+  try {
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    return settings;
+  } catch (err) {
+    console.error('Failed to save settings:', err);
+    return null;
+  }
+}
+
+// ============================================================================
+// My Projects Helpers
+// ============================================================================
+
+export function getUserProjects() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PROJECTS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error('Failed to parse user projects:', err);
+    return [];
+  }
+}
+
+export function saveUserProject(project) {
+  try {
+    const projects = getUserProjects();
+    const newProject = {
+      ...project,
+      id: project.id || `proj_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      created_at: project.created_at || new Date().toISOString(),
+    };
+    const updated = [newProject, ...projects];
+    localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(updated));
+    return newProject;
+  } catch (err) {
+    console.error('Failed to save project:', err);
+    return null;
+  }
+}
+
+export function updateUserProject(id, updatedFields) {
+  try {
+    const projects = getUserProjects();
+    const index = projects.findIndex((p) => p.id === id);
+    if (index === -1) return null;
+    projects[index] = { ...projects[index], ...updatedFields };
+    localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(projects));
+    return projects[index];
+  } catch (err) {
+    console.error('Failed to update project:', err);
+    return null;
+  }
+}
+
+export function deleteUserProject(id) {
+  try {
+    const projects = getUserProjects();
+    const filtered = projects.filter((p) => p.id !== id);
+    localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(filtered));
+    return true;
+  } catch (err) {
+    console.error('Failed to delete project:', err);
+    return false;
+  }
+}
+
+export function getProjectStats() {
+  const sessions = getSessions().filter((s) => s.mode === 'project');
+  if (sessions.length === 0) {
+    return {
+      totalDrills: 0,
+      averageScore: 0,
+      averageDepth: 0,
+      averageOwnership: 0,
+      averageClarity: 0,
+      practicedProjects: [],
+    };
+  }
+
+  const total = sessions.length;
+  const avg = (fn) => +(sessions.reduce((acc, s) => acc + (fn(s) || 0), 0) / total).toFixed(1);
+
+  const projectMap = {};
+  for (const s of sessions) {
+    const name = s.project_name || 'Unnamed Project';
+    projectMap[name] = (projectMap[name] || 0) + 1;
+  }
+
+  return {
+    totalDrills: total,
+    averageScore: avg((s) => s.overall_score),
+    averageDepth: avg((s) => s.technical_depth || s.technical_depth_score),
+    averageOwnership: avg((s) => s.ownership_score),
+    averageClarity: avg((s) => s.clarity_score),
+    practicedProjects: Object.entries(projectMap).map(([name, count]) => ({ name, count })),
+  };
+}
+
+export function getRecentProjectQuestions(limit = 10) {
+  const sessions = getSessions().filter((s) => s.mode === 'project');
+  const questions = [];
+  const seen = new Set();
+  for (const s of sessions) {
+    if (s.topic && !seen.has(s.topic.toLowerCase())) {
+      seen.add(s.topic.toLowerCase());
+      questions.push(s.topic);
+      if (questions.length >= limit) break;
+    }
+  }
+  return questions;
+}
+
+// ============================================================================
+// Clear All Data
+// ============================================================================
+
+export function clearAllUserData() {
+  try {
+    localStorage.removeItem(STORAGE_KEY_SESSIONS);
+    localStorage.removeItem(STORAGE_KEY_PROFILE);
+    localStorage.removeItem(STORAGE_KEY_PROJECTS);
+    localStorage.removeItem(STORAGE_KEY_SETTINGS);
+    localStorage.removeItem(STORAGE_KEY_ONBOARDING);
+    localStorage.removeItem(STORAGE_KEY_DSA_PLATFORMS);
+    localStorage.removeItem(STORAGE_KEY_DSA_JOURNEY);
+    localStorage.removeItem(STORAGE_KEY_DSA_SNAPSHOTS);
+    return true;
+  } catch (err) {
+    console.error('Failed to clear user data:', err);
+    return false;
+  }
+}
+

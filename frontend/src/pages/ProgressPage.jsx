@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Flame,
   BookOpen,
+  FolderGit2,
 } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import ScoreBar from '../components/ScoreBar';
@@ -29,12 +30,14 @@ export default function ProgressPage({
   sessions = [],
   dsaStats,
   coreStats,
+  projectStats,
   onStartPractice,
   onStartDsaPractice,
   onStartCorePractice,
+  onStartProjectPractice,
 }) {
   const [expandedSessionId, setExpandedSessionId] = useState(null);
-  const [historyFilter, setHistoryFilter] = useState('all'); // 'all' | 'general' | 'dsa' | 'core'
+  const [historyFilter, setHistoryFilter] = useState('all'); // 'all' | 'general' | 'dsa' | 'core' | 'project'
 
   const toggleExpand = (id) => {
     setExpandedSessionId((prev) => (prev === id ? null : id));
@@ -48,9 +51,10 @@ export default function ProgressPage({
   };
 
   const filteredSessions = sessions.filter((s) => {
-    if (historyFilter === 'general') return s.mode !== 'dsa' && s.mode !== 'core';
+    if (historyFilter === 'general') return s.mode !== 'dsa' && s.mode !== 'core' && s.mode !== 'project';
     if (historyFilter === 'dsa') return s.mode === 'dsa';
     if (historyFilter === 'core') return s.mode === 'core';
+    if (historyFilter === 'project') return s.mode === 'project';
     return true;
   });
 
@@ -97,6 +101,14 @@ export default function ProgressPage({
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span>CS Core Drill</span>
+          </button>
+
+          <button
+            onClick={onStartProjectPractice}
+            className="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <FolderGit2 className="w-3.5 h-3.5" />
+            <span>Project Drill</span>
           </button>
         </div>
       </div>
@@ -469,6 +481,101 @@ export default function ProgressPage({
         )}
       </div>
 
+      {/* Project Speaking Mastery Section */}
+      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400">
+              <FolderGit2 className="w-4 h-4" />
+              <span>Project Speaking Mastery</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
+              Architecture & Ownership Drills
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-medium">Project Drills:</span>
+            <span className="text-xl font-bold font-mono text-teal-600 dark:text-teal-400">
+              {projectStats?.totalDrills || 0}
+            </span>
+          </div>
+        </div>
+
+        {(projectStats?.totalDrills || 0) > 0 ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                  Avg Project Score
+                </span>
+                <span className="text-xl font-extrabold font-mono text-teal-600 dark:text-teal-400">
+                  {projectStats.averageScore}/10
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                  Ownership & Agency
+                </span>
+                <span className="text-xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400">
+                  {projectStats.averageOwnership}/10
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                  Technical Depth
+                </span>
+                <span className="text-xl font-extrabold font-mono text-purple-600 dark:text-purple-400">
+                  {projectStats.averageDepth}/10
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                  Explanation Clarity
+                </span>
+                <span className="text-xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                  {projectStats.averageClarity}/10
+                </span>
+              </div>
+            </div>
+
+            {projectStats.practicedProjects && projectStats.practicedProjects.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Practiced Projects
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {projectStats.practicedProjects.map((p, idx) => (
+                    <div
+                      key={idx}
+                      className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-2"
+                    >
+                      <span className="text-slate-800 dark:text-slate-200">{p.name}</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300">
+                        {p.count} {p.count === 1 ? 'drill' : 'drills'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-slate-400 space-y-3">
+            <p className="text-sm">No project interview drills completed yet.</p>
+            <button
+              onClick={onStartProjectPractice}
+              className="px-4 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 text-xs font-semibold hover:bg-teal-100 transition-colors cursor-pointer"
+            >
+              Start your first project drill
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Category Breakdown (General Drills) */}
       {Object.keys(stats.category_breakdown || {}).length > 0 && (
         <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-4">
@@ -548,6 +655,16 @@ export default function ProgressPage({
             >
               CS Fundamentals ({sessions.filter((s) => s.mode === 'core').length})
             </button>
+            <button
+              onClick={() => setHistoryFilter('project')}
+              className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+                historyFilter === 'project'
+                  ? 'bg-white dark:bg-slate-900 text-teal-600 dark:text-teal-400 shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Projects ({sessions.filter((s) => s.mode === 'project').length})
+            </button>
           </div>
         </div>
 
@@ -556,7 +673,9 @@ export default function ProgressPage({
             <p className="text-sm font-medium">No speaking drills recorded for this filter.</p>
             <button
               onClick={
-                historyFilter === 'core'
+                historyFilter === 'project'
+                  ? onStartProjectPractice
+                  : historyFilter === 'core'
                   ? onStartCorePractice
                   : historyFilter === 'dsa'
                   ? onStartDsaPractice
@@ -573,6 +692,7 @@ export default function ProgressPage({
               const isExpanded = expandedSessionId === s.id;
               const isDsa = s.mode === 'dsa';
               const isCore = s.mode === 'core';
+              const isProject = s.mode === 'project';
               const dateStr = new Date(s.timestamp).toLocaleDateString(undefined, {
                 month: 'short',
                 day: 'numeric',
@@ -592,7 +712,11 @@ export default function ProgressPage({
                   >
                     <div className="space-y-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        {isCore ? (
+                        {isProject ? (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+                            Project: {s.project_name || 'My Project'}
+                          </span>
+                        ) : isCore ? (
                           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
                             CS Core: {s.subject || 'Fundamentals'}
                           </span>
@@ -622,7 +746,9 @@ export default function ProgressPage({
                       <div className="text-right">
                         <span
                           className={`text-lg font-extrabold font-mono ${
-                            isCore
+                            isProject
+                              ? 'text-teal-600 dark:text-teal-400'
+                              : isCore
                               ? 'text-purple-600 dark:text-purple-400'
                               : isDsa
                               ? 'text-emerald-600 dark:text-emerald-400'
@@ -645,6 +771,47 @@ export default function ProgressPage({
                   {/* Expanded Details */}
                   {isExpanded && (
                     <div className="p-4 sm:p-6 border-t border-slate-200/50 dark:border-slate-800/60 bg-white dark:bg-slate-900/60 space-y-4 text-xs sm:text-sm animate-in fade-in duration-150">
+                      {isProject && (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                            <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+                              <span className="text-slate-400 block text-[10px]">Ownership & Agency</span>
+                              <span className="font-bold text-teal-600 dark:text-teal-400">
+                                {s.ownership_score || 0}/10
+                              </span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+                              <span className="text-slate-400 block text-[10px]">Technical Depth</span>
+                              <span className="font-bold text-purple-600 dark:text-purple-400">
+                                {s.technical_depth_score || 0}/10
+                              </span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+                              <span className="text-slate-400 block text-[10px]">Clarity & Structure</span>
+                              <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                                {s.clarity_score || 0}/10
+                              </span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+                              <span className="text-slate-400 block text-[10px]">Conciseness</span>
+                              <span className="font-bold text-amber-600 dark:text-amber-400">
+                                {s.conciseness_score || 0}/10
+                              </span>
+                            </div>
+                          </div>
+                          {s.ownership_feedback && (
+                            <div className="p-3 rounded-xl bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200/60 dark:border-teal-900/40 text-xs">
+                              <span className="font-bold text-teal-900 dark:text-teal-200 block mb-1">
+                                Ownership Coaching:
+                              </span>
+                              <p className="text-teal-800 dark:text-teal-300 leading-relaxed">
+                                {s.ownership_feedback}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {isCore && (
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">

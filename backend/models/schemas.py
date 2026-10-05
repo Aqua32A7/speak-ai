@@ -9,10 +9,60 @@ class DifficultyLevel(str, Enum):
     HARD = "Hard"
 
 
+# ============================================================================
+# User Profile Schema
+# ============================================================================
+
+class UserProfile(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=100, description="Candidate name")
+    education: Optional[str] = Field(default=None, max_length=150, description="University / College / School")
+    experience_level: Optional[str] = Field(default=None, max_length=100, description="Year or experience level")
+    field_of_study: Optional[str] = Field(default=None, max_length=100, description="Field of study / Major")
+    target_role: Optional[str] = Field(default=None, max_length=100, description="Target job title or role")
+    languages: Optional[List[str]] = Field(default_factory=list, description="Primary programming languages")
+    skills: Optional[List[str]] = Field(default_factory=list, description="Key skills and interests")
+    english_level: Optional[str] = Field(default=None, max_length=50, description="Spoken English level: beginner, intermediate, advanced")
+    goals: Optional[str] = Field(default=None, max_length=300, description="Candidate practice goals")
+
+    def has_content(self) -> bool:
+        return any([
+            self.name,
+            self.education,
+            self.experience_level,
+            self.field_of_study,
+            self.target_role,
+            bool(self.languages),
+            bool(self.skills),
+            self.english_level,
+            self.goals,
+        ])
+
+
+# ============================================================================
+# General Speaking Practice Schemas
+# ============================================================================
+
+class ProjectBrief(BaseModel):
+    id: Optional[str] = Field(default=None, description="Unique client-side ID")
+    name: str = Field(..., max_length=150, description="Project name")
+    summary: str = Field(..., max_length=2000, description="Overview of the project and problem solved")
+    tech_stack: List[str] = Field(default_factory=list, description="Technologies, libraries, and frameworks")
+    key_features: List[str] = Field(default_factory=list, description="Key features built")
+    architecture_overview: str = Field(..., max_length=2000, description="System architecture and structure")
+    notable_challenges: List[str] = Field(default_factory=list, description="Technical challenges encountered")
+    what_user_built: str = Field(..., max_length=2000, description="What the candidate specifically authored")
+    likely_interview_angles: List[str] = Field(default_factory=list, description="Likely interview questions / discussion angles")
+    source: str = Field(default="manual", description="'github' or 'manual'")
+    confidence_notes: str = Field(default="", max_length=1000, description="Notes on inference certainty or gaps")
+    created_at: Optional[str] = Field(default=None, description="Timestamp created")
+
+
 class TopicRequest(BaseModel):
     difficulty: str = Field(default="Medium", description="Easy, Medium, or Hard")
     category_filter: str = Field(default="Random", description="Category filter label or Surprise Me/Random")
     recent_topics: List[str] = Field(default_factory=list, description="List of recently generated topics to prevent duplicates")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
+    project_brief: Optional[ProjectBrief] = Field(default=None, description="Optional project brief if practicing a project topic")
 
 
 class TopicResponse(BaseModel):
@@ -23,13 +73,14 @@ class TopicResponse(BaseModel):
 
 
 class AnalyzeRequest(BaseModel):
-    topic: str = Field(..., description="Topic of the speaking session")
-    transcript: str = Field(..., description="Speech transcript from the user")
+    topic: str = Field(..., max_length=1000, description="Topic of the speaking session")
+    transcript: str = Field(..., max_length=5000, description="Speech transcript from the user")
     duration_seconds: float = Field(..., ge=1.0, description="Actual speaking duration in seconds")
     time_to_first_word_seconds: float = Field(default=0.0, ge=0.0, description="Time until the first speech event")
     longest_pause_seconds: float = Field(default=0.0, ge=0.0, description="Longest pause detected between speech chunks")
     pauses_over_2s_count: int = Field(default=0, ge=0, description="Number of pauses exceeding 2 seconds")
     parent_session_id: Optional[str] = Field(default=None, description="Optional parent session ID if this is a follow-up answer")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
 
 
 class BetterPhrase(BaseModel):
@@ -53,7 +104,7 @@ class GeminiAnalysis(BaseModel):
     strengths: List[str] = Field(..., description="2-4 bullet points highlighting what the user did well")
     improvements: List[str] = Field(..., min_length=3, max_length=3, description="Exactly 3 specific, actionable suggestions for improvement")
     better_phrases: List[BetterPhrase] = Field(..., description="Alternative phrases replacing conversational or clunky expressions")
-    sample_answer: str = Field(..., description="Realistic 60-second college student interview answer with bracketed useful phrases")
+    sample_answer: str = Field(..., description="Realistic 60-second interview answer with bracketed useful phrases")
     next_focus_area: str = Field(..., description="Single highest-leverage skill to focus on in the next drill")
 
 
@@ -87,8 +138,9 @@ class SpeechAnalysisResponse(BaseModel):
 
 
 class FollowUpRequest(BaseModel):
-    topic: str = Field(..., description="Original topic")
-    transcript: str = Field(..., description="User's response transcript")
+    topic: str = Field(..., max_length=1000, description="Original topic")
+    transcript: str = Field(..., max_length=5000, description="User's response transcript")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
 
 
 class FollowUpResponse(BaseModel):
@@ -167,6 +219,7 @@ class GeminiDsaJourneyAnalysis(BaseModel):
 
 class DsaJourneyAnalyzeRequest(BaseModel):
     calculation: DsaJourneyCalculation = Field(..., description="Deterministic pre-calculated journey metrics")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
 
 
 class DsaJourneyResponse(BaseModel):
@@ -196,6 +249,7 @@ class DsaQuestionRequest(BaseModel):
     recent_questions: List[str] = Field(default_factory=list, description="Recent DSA questions to avoid repeating")
     recent_subtopics: List[str] = Field(default_factory=list, description="Recent subtopics to ensure variety")
     journey_context: Optional[DsaJourneyBrief] = Field(default=None, description="Optional user DSA journey stats to drive personalized questions")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
 
 
 class DsaQuestionResponse(BaseModel):
@@ -208,8 +262,8 @@ class DsaQuestionResponse(BaseModel):
 
 
 class DsaAnalyzeRequest(BaseModel):
-    question: str = Field(..., description="The DSA interview question")
-    transcript: str = Field(..., description="User's spoken answer transcript")
+    question: str = Field(..., max_length=1000, description="The DSA interview question")
+    transcript: str = Field(..., max_length=5000, description="User's spoken answer transcript")
     key_points: List[str] = Field(default_factory=list, description="The key points associated with this question")
     duration_seconds: float = Field(..., ge=1.0, description="Actual speaking duration in seconds")
     time_to_first_word_seconds: float = Field(default=0.0, ge=0.0, description="Time until the first speech event")
@@ -217,6 +271,7 @@ class DsaAnalyzeRequest(BaseModel):
     pauses_over_2s_count: int = Field(default=0, ge=0, description="Number of pauses exceeding 2 seconds")
     parent_session_id: Optional[str] = Field(default=None, description="Optional parent session ID for chained follow-ups")
     follow_up_chain_count: int = Field(default=0, ge=0, le=3, description="Chained follow-up round number (0 to 3)")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
 
 
 class GeminiDsaAnalysis(BaseModel):
@@ -236,7 +291,7 @@ class GeminiDsaAnalysis(BaseModel):
     misconceptions: List[str] = Field(default_factory=list, description="Any factually incorrect statements, explained gently and constructively")
     improvements: List[str] = Field(..., min_length=3, max_length=3, description="Exactly 3 specific, actionable suggestions for improvement")
     strengths: List[str] = Field(..., description="2-4 positive highlights from the candidate's explanation")
-    sample_answer: str = Field(..., description="Model 60-second answer in the tone of a strong college student with bracketed highlights")
+    sample_answer: str = Field(..., description="Model 60-second answer in the tone of a strong candidate with bracketed highlights")
     next_focus_area: str = Field(..., description="The single highest-leverage skill to focus on in the next DSA drill")
 
 
@@ -272,9 +327,10 @@ class DsaSpeechAnalysisResponse(BaseModel):
 
 
 class DsaFollowUpRequest(BaseModel):
-    question: str = Field(..., description="Current DSA question")
-    transcript: str = Field(..., description="User's spoken answer")
+    question: str = Field(..., max_length=1000, description="Current DSA question")
+    transcript: str = Field(..., max_length=5000, description="User's spoken answer")
     chain_count: int = Field(default=1, description="Current follow-up depth (1, 2, or 3)")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
 
 
 class DsaFollowUpResponse(BaseModel):
@@ -291,7 +347,7 @@ class CoreQuestionRequest(BaseModel):
     mode: str = Field(default="test", description="'test' (direct question) or 'teach' (primer + question)")
     recent_questions: List[str] = Field(default_factory=list, description="Recent questions to avoid repetition")
     weak_topics: List[str] = Field(default_factory=list, description="Topics with lower mastery scores to prioritize")
-    user_profile: Optional[str] = Field(default=None, description="Optional custom candidate profile context")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile context")
 
 
 class CoreQuestionResponse(BaseModel):
@@ -306,17 +362,18 @@ class CoreQuestionResponse(BaseModel):
 
 
 class CoreAnalyzeRequest(BaseModel):
-    question: str = Field(..., description="The CS fundamentals question")
-    subject: str = Field(default="", description="Subject category")
-    subtopic: str = Field(default="", description="Subtopic name")
+    question: str = Field(..., max_length=1000, description="The CS fundamentals question")
+    subject: str = Field(default="", max_length=150, description="Subject category")
+    subtopic: str = Field(default="", max_length=150, description="Subtopic name")
     key_points: List[str] = Field(default_factory=list, description="Expected key points")
-    transcript: str = Field(..., description="Spoken transcript")
+    transcript: str = Field(..., max_length=5000, description="Spoken transcript")
     duration_seconds: float = Field(..., ge=1.0, description="Actual speaking duration in seconds")
     time_to_first_word_seconds: float = Field(default=0.0, ge=0.0, description="Time until the first speech event")
     longest_pause_seconds: float = Field(default=0.0, ge=0.0, description="Longest pause between speech chunks")
     pauses_over_2s_count: int = Field(default=0, ge=0, description="Number of pauses exceeding 2 seconds")
     parent_session_id: Optional[str] = Field(default=None, description="Optional parent session ID for chained follow-ups")
     follow_up_chain_count: int = Field(default=0, ge=0, le=3, description="Chained round number (0 to 3)")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
 
 
 class CoreConceptRefresher(BaseModel):
@@ -341,7 +398,7 @@ class GeminiCoreAnalysis(BaseModel):
     misconceptions: List[str] = Field(default_factory=list, description="Factual inaccuracies gently and constructively corrected")
     improvements: List[str] = Field(..., min_length=3, max_length=3, description="Exactly 3 specific, actionable recommendations")
     strengths: List[str] = Field(..., description="2-4 positive highlights from the candidate's explanation")
-    sample_answer: str = Field(..., description="Realistic 60s college student answer with bracketed highlights")
+    sample_answer: str = Field(..., description="Realistic 60s candidate answer with bracketed highlights")
     refresher: CoreConceptRefresher = Field(..., description="Post-drill concept refresher with concise explanation and remember points")
     next_focus_area: str = Field(..., description="Highest-leverage topic or skill to focus on next")
 
@@ -379,12 +436,140 @@ class CoreSpeechAnalysisResponse(BaseModel):
 
 
 class CoreFollowUpRequest(BaseModel):
-    question: str = Field(..., description="Current CS core question")
-    transcript: str = Field(..., description="User's spoken answer")
+    question: str = Field(..., max_length=1000, description="Current CS core question")
+    transcript: str = Field(..., max_length=5000, description="User's spoken answer")
     chain_count: int = Field(default=1, description="Current follow-up depth (1, 2, or 3)")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
 
 
 class CoreFollowUpResponse(BaseModel):
     follow_up_question: str = Field(..., description="One deeper, contextual CS interview follow-up question")
 
 
+# ============================================================================
+# My Projects & Project-Based Interview Schemas
+# ============================================================================
+
+class ManualProjectDetails(BaseModel):
+    name: str = Field(..., max_length=150, description="Project name")
+    description: str = Field(..., max_length=3000, description="Description of the project and problem solved")
+    tech_stack: Optional[str] = Field(default="", max_length=500, description="Technologies, frameworks, and libraries used")
+    what_user_built: Optional[str] = Field(default="", max_length=3000, description="What the candidate specifically authored")
+    challenges_faced: Optional[str] = Field(default="", max_length=3000, description="Notable challenges, bugs, or bottlenecks faced")
+    results_impact: Optional[str] = Field(default="", max_length=2000, description="Results, impact, or outcomes achieved")
+
+
+class GeminiProjectBrief(BaseModel):
+    """
+    Schema strictly for Gemini's structured response_schema.
+    Contains qualitative evaluation without dict types.
+    """
+    name: str = Field(..., description="Project name")
+    summary: str = Field(..., description="2-3 sentence overview of what the application does and problem solved")
+    tech_stack: List[str] = Field(default_factory=list, description="4-8 specific technologies and tools used")
+    key_features: List[str] = Field(default_factory=list, description="3-5 concrete functional features")
+    architecture_overview: str = Field(..., description="2-3 sentence explanation of system design and data flow")
+    notable_challenges: List[str] = Field(default_factory=list, description="2-3 realistic technical challenges")
+    what_user_built: str = Field(..., description="Concise summary of what the candidate built and configured")
+    likely_interview_angles: List[str] = Field(default_factory=list, description="3-5 likely interview angles")
+    confidence_notes: str = Field(default="", description="Notes on missing details, inference confidence, or areas to clarify")
+
+
+class ProjectAnalyzeRequest(BaseModel):
+    github_url: Optional[str] = Field(default=None, max_length=500, description="Public GitHub repository URL")
+    manual_details: Optional[ManualProjectDetails] = Field(default=None, description="Manual project details if not using GitHub URL")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
+
+
+class ProjectQuestionRequest(BaseModel):
+    project_brief: ProjectBrief = Field(..., description="The project brief")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
+    difficulty: str = Field(default="Medium", description="Easy, Medium, or Hard")
+    recent_questions: List[str] = Field(default_factory=list, description="Recent questions to avoid repetition")
+    question_type: Optional[str] = Field(default="Surprise Me", description="Specific interview angle or Surprise Me")
+
+
+class ProjectQuestionResponse(BaseModel):
+    question: str = Field(..., description="The oral project interview question prompt")
+    question_type: str = Field(..., description="The interview angle")
+    difficulty: str = Field(..., description="Easy, Medium, or Hard")
+    key_points: List[str] = Field(..., description="Key points a strong answer should address (hidden until feedback)")
+    follow_up_question: str = Field(..., description="An initial follow-up question related to this project aspect")
+    project_name: str = Field(..., description="Name of the project")
+
+
+class ProjectAnswerAnalyzeRequest(BaseModel):
+    question: str = Field(..., max_length=1000, description="The project interview question")
+    question_type: str = Field(default="Project Architecture", max_length=150, description="The interview angle")
+    project_brief: ProjectBrief = Field(..., description="The project brief")
+    key_points: List[str] = Field(default_factory=list, description="Expected key points")
+    transcript: str = Field(..., max_length=5000, description="Spoken transcript")
+    duration_seconds: float = Field(..., ge=1.0, description="Actual speaking duration in seconds")
+    time_to_first_word_seconds: float = Field(default=0.0, ge=0.0, description="Time until the first speech event")
+    longest_pause_seconds: float = Field(default=0.0, ge=0.0, description="Longest pause between speech chunks")
+    pauses_over_2s_count: int = Field(default=0, ge=0, description="Number of pauses exceeding 2 seconds")
+    parent_session_id: Optional[str] = Field(default=None, description="Optional parent session ID for chained follow-ups")
+    follow_up_chain_count: int = Field(default=0, ge=0, le=3, description="Chained round number (0 to 3)")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
+
+
+class GeminiProjectAnswerAnalysis(BaseModel):
+    """
+    Schema strictly for Gemini's structured response_schema.
+    Contains qualitative evaluation without dict types.
+    """
+    overall_score: float = Field(..., ge=0, le=10, description="Overall answer score between 0 and 10")
+    technical_depth: float = Field(..., ge=0, le=10, description="Technical depth and engineering accuracy")
+    clarity_score: float = Field(..., ge=0, le=10, description="Clarity and conciseness of oral explanation")
+    ownership_score: float = Field(..., ge=0, le=10, description="Personal agency and ownership: 'I built...' vs passive 'we did...'")
+    concrete_details_score: float = Field(..., ge=0, le=10, description="Specificity: metrics, libraries, architecture vs hand-waving")
+    fluency: float = Field(..., ge=0, le=10, description="Smooth verbal flow and rhythm")
+    covered_points: List[str] = Field(..., description="Key points from the question that the candidate addressed")
+    missed_points: List[str] = Field(..., description="Key points from the question that were omitted")
+    ownership_feedback: str = Field(..., description="Feedback specifically assessing personal agency and active ownership")
+    improvements: List[str] = Field(..., min_length=3, max_length=3, description="Exactly 3 specific, actionable recommendations")
+    strengths: List[str] = Field(..., description="2-4 positive highlights from the candidate's explanation")
+    sample_answer: str = Field(..., description="Realistic 60s candidate answer with bracketed highlights")
+    next_focus_area: str = Field(..., description="Highest-leverage skill or angle to focus on in next drill")
+
+
+class ProjectSpeechAnalysisResponse(BaseModel):
+    """
+    Final API response for Project speech evaluation.
+    Merges qualitative Gemini evaluation with deterministic speech metrics.
+    """
+    overall_score: float
+    technical_depth: float
+    clarity_score: float
+    ownership_score: float
+    concrete_details_score: float
+    fluency: float
+    covered_points: List[str]
+    missed_points: List[str]
+    ownership_feedback: str
+    improvements: List[str]
+    strengths: List[str]
+    sample_answer: str
+    next_focus_area: str
+    # Deterministic metrics
+    words_per_minute: float
+    word_count: int
+    duration_seconds: float
+    filler_words_count: int
+    filler_words_breakdown: Dict[str, int]
+    # Hesitation & pause metrics
+    time_to_first_word_seconds: float
+    longest_pause_seconds: float
+    pauses_over_2s_count: int
+
+
+class ProjectFollowUpRequest(BaseModel):
+    question: str = Field(..., max_length=1000, description="Current project interview question")
+    transcript: str = Field(..., max_length=5000, description="User's spoken answer")
+    project_brief: ProjectBrief = Field(..., description="The project brief")
+    chain_count: int = Field(default=1, ge=1, le=3, description="Current follow-up depth (1, 2, or 3)")
+    profile: Optional[UserProfile] = Field(default=None, description="Optional candidate profile")
+
+
+class ProjectFollowUpResponse(BaseModel):
+    follow_up_question: str = Field(..., description="One deeper, contextual project interview follow-up question")

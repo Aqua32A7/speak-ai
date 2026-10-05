@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { Sparkles, Layers, Sliders, ArrowRight, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Layers, Sliders, ArrowRight, Check, FolderGit2, Info } from 'lucide-react';
 import ErrorBanner from '../components/ErrorBanner';
+import { getUserProjects } from '../services/storage';
 
 const CATEGORIES = [
   { id: 'Random', label: 'Surprise Me', icon: '🎲' },
   { id: 'Interview', label: 'Interview', icon: '💼' },
   { id: 'Technical', label: 'Technical', icon: '⚙️' },
   { id: 'ML/AI', label: 'ML / AI', icon: '🤖' },
-  { id: 'DSA', label: 'DSA & C++', icon: '🧠' },
+  { id: 'DSA', label: 'DSA & Algorithms', icon: '🧠' },
   { id: 'Projects', label: 'Projects', icon: '🚀' },
   { id: 'Behavioral', label: 'Behavioral', icon: '🤝' },
   { id: 'Career', label: 'Career', icon: '🎯' },
@@ -29,25 +30,37 @@ const DIFFICULTIES = [
   {
     id: 'Hard',
     label: 'Hard',
-    desc: 'Deep algorithmic explanations, C++ memory/pointers, ML trade-offs, and edge case reasoning.',
+    desc: 'Deep algorithmic explanations, architectural trade-offs, scalability bottlenecks, and edge cases.',
     badge: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400',
   },
 ];
 
-export default function SetupPage({ onGenerateTopic, isLoading, error, onClearError }) {
+export default function SetupPage({ onGenerateTopic, isLoading, error, onClearError, onNavigateToProjects }) {
   const [selectedDifficulty, setSelectedDifficulty] = useState('Medium');
   const [selectedCategory, setSelectedCategory] = useState('Random');
+  const [userProjects, setUserProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState('generic');
+
+  useEffect(() => {
+    setUserProjects(getUserProjects());
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    let attachedBrief = null;
+    if (selectedCategory === 'Projects' && selectedProjectId !== 'generic') {
+      attachedBrief = userProjects.find((p) => p.id === selectedProjectId) || null;
+    }
+
     onGenerateTopic({
       difficulty: selectedDifficulty,
       categoryFilter: selectedCategory,
+      projectBrief: attachedBrief,
     });
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8 animate-fade-in">
       <div>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 text-xs font-semibold mb-3">
           <Sliders className="w-3.5 h-3.5" />
@@ -57,7 +70,7 @@ export default function SetupPage({ onGenerateTopic, isLoading, error, onClearEr
           Configure Your Speaking Drill
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Every topic is dynamically crafted by Gemini AI based on your background and past sessions.
+          Every topic is dynamically crafted by Gemini AI based on your candidate profile and past sessions.
         </p>
       </div>
 
@@ -129,6 +142,49 @@ export default function SetupPage({ onGenerateTopic, isLoading, error, onClearEr
             })}
           </div>
         </div>
+
+        {/* Project Picker if Category is Projects */}
+        {selectedCategory === 'Projects' && (
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <FolderGit2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                Project Source
+              </span>
+              {onNavigateToProjects && (
+                <button
+                  type="button"
+                  onClick={onNavigateToProjects}
+                  className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-semibold"
+                >
+                  + Manage My Projects
+                </button>
+              )}
+            </div>
+
+            {userProjects.length > 0 ? (
+              <select
+                value={selectedProjectId}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                <option value="generic">Generic Project Experience Questions</option>
+                {userProjects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.tech_stack?.slice(0, 3).join(', ') || p.source})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <Info className="w-4 h-4 shrink-0 text-slate-400 mt-0.5" />
+                <span>
+                  No saved projects found. Gemini will ask a generic project-experience question, or you can add your repo in <strong>My Projects</strong>.
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Action Button */}
         <div className="pt-4">

@@ -11,6 +11,8 @@ export default function TopicCard({
   roundNumber,
   isDsa = false,
   isCore = false,
+  isProject = false,
+  projectName,
   subject,
   primer,
 }) {
@@ -26,6 +28,7 @@ export default function TopicCard({
   };
 
   const getGradient = () => {
+    if (isProject) return 'bg-gradient-to-r from-teal-500 via-cyan-500 to-indigo-500';
     if (isCore) return 'bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500';
     if (isDsa) return 'bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500';
     return 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500';
@@ -38,6 +41,13 @@ export default function TopicCard({
 
       {/* Meta tags */}
       <div className="flex flex-wrap items-center gap-2.5">
+        {isProject && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800/60">
+            <Tag className="w-3 h-3" />
+            Project: {projectName || 'My Project'}
+          </span>
+        )}
+
         {isCore && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-800/60">
             <Tag className="w-3 h-3" />
@@ -70,7 +80,7 @@ export default function TopicCard({
           </span>
         )}
 
-        {!isDsa && !isCore && category && (
+        {!isDsa && !isCore && !isProject && category && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800/60">
             <Tag className="w-3 h-3" />
             {category}
@@ -112,7 +122,11 @@ export default function TopicCard({
       <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
         <HelpCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
         <span>
-          {isCore ? (
+          {isProject ? (
+            <>
+              <strong>Project Defense Advice:</strong> State your individual ownership ("I designed/built...") ➔ Explain key architectural choices ➔ Detail trade-offs, bugs, or scale challenges faced.
+            </>
+          ) : isCore ? (
             <>
               <strong>4-Part Structure to Follow:</strong> Definition (what it is) ➔ Mechanism (how it works) ➔ Concrete Example ➔ Trade-off or Limitation.
             </>

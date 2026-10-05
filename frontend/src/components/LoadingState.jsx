@@ -5,7 +5,7 @@ const TIPS = [
   "Tip: Lead with the bottom-line result before explaining technical details.",
   "Tip: In 60 seconds, structure your answer: Context (15s) → Action (30s) → Outcome & Trade-offs (15s).",
   "Tip: Replacing filler phrases with a 1-second silent breath conveys natural executive presence.",
-  "Tip: Mention specific engineering decisions, such as time complexity or why you chose C++.",
+  "Tip: Mention specific engineering decisions, such as time complexity or why you chose a particular architecture.",
   "Tip: High-impact interview communication is about clarity and conciseness, not speed.",
 ];
 
