@@ -101,13 +101,15 @@ speak ai/
         │   ├── ErrorBanner.jsx   # Contextual error alerts & recovery actions
         │   └── LoadingState.jsx  # Animated evaluation spinner & speaking tips
         ├── pages/
-        │   ├── HomePage.jsx      # Welcome dashboard & today's summary
-        │   ├── SetupPage.jsx     # Difficulty & category parameters
-        │   ├── PracticePage.jsx  # 10s prep + 60s drill state machine
-        │   ├── FeedbackPage.jsx  # Coach review & follow-up round trigger
-        │   └── ProgressPage.jsx  # Interview Readiness & session history
+        │   ├── HomePage.jsx        # Welcome dashboard & today's summary
+        │   ├── SetupPage.jsx       # General drill difficulty & category parameters
+        │   ├── DsaSetupPage.jsx    # DSA Interview parameters (14 subtopics, 6 question types)
+        │   ├── PracticePage.jsx    # 10s prep + 60s drill state machine
+        │   ├── FeedbackPage.jsx    # General coach review & follow-up round trigger
+        │   ├── DsaFeedbackPage.jsx # DSA evaluation, key points checklist, & chained follow-ups
+        │   └── ProgressPage.jsx    # Interview Readiness, DSA Mastery, & session history
         └── services/
-            ├── api.js            # Fetch client for backend endpoints
+            ├── api.js            # Fetch client for backend endpoints (General & DSA)
             ├── storage.js        # LocalStorage persistence & readiness math
             └── useSpeechRecognition.js # Web Speech API continuous recognition hook
 ```
@@ -123,13 +125,22 @@ speak ai/
 ## Key Features
 
 1. **Zero Hardcoded Prompts**: Every topic is generated dynamically by Google Gemini using high-temperature sampling (0.95) and conditioned on the student's recent drill history to prevent repetitions.
-2. **Accurate Timestamp Timers**: Both the 10-second mental preparation timer and the 60-second speaking timer calculate real-time elapsed deltas using `Date.now()` and `performance.now()`. Timers do not drift or pause when mobile browsers throttle background tabs.
-3. **Deterministic Speech Metrics**: Words per minute (WPM) and filler word occurrences are computed deterministically in Python using strict regex tokenization and duration normalization—Gemini is never trusted for exact arithmetic.
-4. **Pause & Hesitation Tracking**: The frontend records timestamps for time-to-first-word, longest gap between speech bursts, and instances of pauses longer than 2 seconds. These delivery metrics are passed to Gemini so pacing feedback is grounded in real data.
-5. **Multi-Dimensional Coaching**: 7 scoring dimensions (Fluency, Clarity, Grammar, Relevance, Confidence, Technical Depth, Overall), exactly 3 prioritized improvements, key strengths, professional phrase upgrades, and a realistic college student model answer.
-6. **Interviewer Follow-up Rounds**: After feedback, Gemini suggests a natural follow-up question. Clicking *"Answer Follow-up (60s)"* launches a linked round (`parent_session_id`) to simulate real interview back-and-forth.
-7. **Interview Readiness Indicators**: Evaluates Communication, Technical Explanation, Confidence, Fluency, and an overall Readiness Index derived from past drills (clearly labeled as practice indicators).
-8. **Dark / Light Mode**: Polished UI with full light and dark mode support, persisted in localStorage.
+2. **DSA Interview Mode (Spoken Explanations)**:
+   - Dedicated oral mode designed for candidates with 400+ LeetCode problems (C++ context).
+   - 14 Subtopics (Arrays & Strings, Linked Lists, Stacks & Queues, Hashing, Trees & BST, Graphs, Recursion & Backtracking, Dynamic Programming, Sorting & Searching, Heaps, Greedy, Two Pointers / Sliding Window, Bit Manipulation, Surprise Me).
+   - 6 Question Types (Theory/Concept, Explain an Approach, Complexity Analysis, Compare Data Structures, Edge Cases & Pitfalls, "Why did you choose X?", Surprise Me).
+   - Evaluates spoken answer structure: **Core Idea ➔ Approach / Logic ➔ Time & Space Complexity ➔ Tricky Edge Cases**.
+   - Generates hidden `key_points` to produce a rigorous **Covered ✓ vs Missed ✗** checklist.
+   - Detects and flags any factual algorithmic **misconceptions**.
+   - Supports up to **3 chained interviewer follow-up rounds** linked by `parent_session_id`.
+   - Dedicated **DSA Speaking Mastery** analytics and weakest subtopic detection on the Progress dashboard.
+3. **Accurate Timestamp Timers**: Both the 10-second mental preparation timer and the 60-second speaking timer calculate real-time elapsed deltas using `Date.now()` and `performance.now()`. Timers do not drift or pause when mobile browsers throttle background tabs.
+4. **Deterministic Speech Metrics**: Words per minute (WPM) and filler word occurrences are computed deterministically in Python using strict regex tokenization and duration normalization—Gemini is never trusted for exact arithmetic.
+5. **Pause & Hesitation Tracking**: The frontend records timestamps for time-to-first-word, longest gap between speech bursts, and instances of pauses longer than 2 seconds. These delivery metrics are passed to Gemini so pacing feedback is grounded in real data.
+6. **Multi-Dimensional Coaching**: 7 scoring dimensions, exactly 3 prioritized improvements, key strengths, professional phrase upgrades, and a realistic college student model answer with highlighted key phrases.
+7. **Interviewer Follow-up Rounds**: After feedback, Gemini suggests a natural follow-up question. Clicking *"Answer Follow-up (60s)"* launches a linked round (`parent_session_id`) to simulate real interview back-and-forth.
+8. **Interview Readiness Indicators**: Evaluates Communication, Technical Explanation, Confidence, Fluency, and an overall Readiness Index derived from past drills (clearly labeled as practice indicators).
+9. **Dark / Light Mode**: Polished UI with full light and dark mode support, persisted in localStorage.
 
 ---
 

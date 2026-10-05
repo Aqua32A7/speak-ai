@@ -2,16 +2,28 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import SetupPage from './pages/SetupPage';
+import DsaSetupPage from './pages/DsaSetupPage';
 import PracticePage from './pages/PracticePage';
 import FeedbackPage from './pages/FeedbackPage';
+import DsaFeedbackPage from './pages/DsaFeedbackPage';
 import ProgressPage from './pages/ProgressPage';
 
-import { fetchHealth, fetchTopic, analyzeSpeech, fetchFollowUp } from './services/api';
+import {
+  fetchHealth,
+  fetchTopic,
+  analyzeSpeech,
+  fetchFollowUp,
+  fetchDsaQuestion,
+  analyzeDsaAnswer,
+  fetchDsaFollowUp,
+} from './services/api';
 import {
   getSessions,
   saveSession,
   getRecentTopics,
+  getRecentDsaQuestions,
   getStats,
+  getDsaStats,
   getInterviewReadiness,
   getStoredTheme,
   setStoredTheme,
@@ -19,7 +31,7 @@ import {
 import { useSpeechRecognition } from './services/useSpeechRecognition';
 
 export default function App() {
-  // Navigation: 'home' | 'setup' | 'practice' | 'feedback' | 'progress'
+  // Navigation: 'home' | 'setup' | 'practice' | 'feedback' | 'progress' | 'dsa_setup' | 'dsa_practice' | 'dsa_feedback'
   const [currentView, setCurrentView] = useState('home');
 
   // Theme
@@ -36,8 +48,12 @@ export default function App() {
   const [topicError, setTopicError] = useState(null);
   const [analysisError, setAnalysisError] = useState(null);
 
+  // DSA Interview Mode State
+  const [dsaChainCount, setDsaChainCount] = useState(1);
+
   // Storage state
   const [stats, setStats] = useState(getStats);
+  const [dsaStats, setDsaStats] = useState(getDsaStats);
   const [readiness, setReadiness] = useState(getInterviewReadiness);
   const [sessions, setSessions] = useState(getSessions);
 
@@ -71,11 +87,12 @@ export default function App() {
   // Refresh storage metrics
   const refreshStorageData = useCallback(() => {
     setStats(getStats());
+    setDsaStats(getDsaStats());
     setReadiness(getInterviewReadiness());
     setSessions(getSessions());
   }, []);
 
-  // Generate topic from Gemini
+  // Generate general topic from Gemini
   const handleGenerateTopic = async ({ difficulty, categoryFilter }) => {
     setIsGeneratingTopic(true);
     setTopicError(null);
@@ -88,6 +105,8 @@ export default function App() {
         difficulty: data.difficulty,
         follow_up_question: data.follow_up_question,
         parentSessionId: null,
+        mode: 'general',
+        roundNumber: 1,
       });
       setCurrentView('practice');
     } catch (err) {
@@ -98,7 +117,41 @@ export default function App() {
     }
   };
 
-  // Submit drill to Gemini for analysis
+  // Generate DSA interview question from Gemini
+  const handleGenerateDsaQuestion = async ({ subtopic, questionType, difficulty }) => {
+    setIsGeneratingTopic(true);
+    setTopicError(null);
+    try {
+      const recentQuestions = getRecentDsaQuestions(15);
+      const data = await fetchDsaQuestion({
+        difficulty,
+        subtopicFilter: subtopic,
+        typeFilter: questionType,
+        recentQuestions,
+      });
+
+      setActiveTopic({
+        topic: data.question,
+        subtopic: data.subtopic,
+        question_type: data.question_type,
+        difficulty: data.difficulty,
+        key_points: data.key_points || [],
+        follow_up_question: data.follow_up_question,
+        mode: 'dsa',
+        parentSessionId: null,
+        roundNumber: 1,
+      });
+      setDsaChainCount(1);
+      setCurrentView('dsa_practice');
+    } catch (err) {
+      console.error('Error generating DSA question:', err);
+      setTopicError(err.message || 'Failed to generate DSA question from Gemini.');
+    } finally {
+      setIsGeneratingTopic(false);
+    }
+  };
+
+  // Submit drill to Gemini for analysis (General or DSA)
   const handleFinishDrill = async ({
     topic,
     transcript,
@@ -107,40 +160,102 @@ export default function App() {
     longestPause,
     pausesOver2s,
     parentSessionId,
+    keyPoints = [],
+    subtopic,
+    questionType,
+    mode = 'general',
   }) => {
     setIsLoadingAnalysis(true);
     setAnalysisError(null);
 
+    const isDsa = mode === 'dsa' || activeTopic?.mode === 'dsa';
+
     try {
-      const analysisData = await analyzeSpeech({
-        topic,
-        transcript,
-        durationSeconds,
-        timeToFirstWord,
-        longestPause,
-        pausesOver2s,
-        parentSessionId,
-      });
+      if (isDsa) {
+        // DSA Analysis
+        const analysisData = await analyzeDsaAnswer({
+          question: topic,
+          transcript,
+          keyPoints: keyPoints.length > 0 ? keyPoints : (activeTopic?.key_points || []),
+          durationSeconds,
+          timeToFirstWord,
+          longestPause,
+          pausesOver2s,
+          parentSessionId,
+          followUpChainCount: dsaChainCount,
+        });
 
-      // Save drill session to localStorage
-      const saved = saveSession({
-        topic,
-        category: activeTopic?.category || 'General',
-        difficulty: activeTopic?.difficulty || 'Medium',
-        transcript,
-        duration_seconds: durationSeconds,
-        ...analysisData,
-        parent_session_id: parentSessionId,
-      });
+        // Save DSA drill session to localStorage
+        const saved = saveSession({
+          mode: 'dsa',
+          topic,
+          subtopic: subtopic || activeTopic?.subtopic || 'General DSA',
+          question_type: questionType || activeTopic?.question_type || 'Theory/Concept',
+          difficulty: activeTopic?.difficulty || 'Medium',
+          transcript,
+          duration_seconds: durationSeconds,
+          ...analysisData,
+          parent_session_id: parentSessionId,
+        });
 
-      // Refresh stats
-      refreshStorageData();
+        // Optionally fetch dynamic contextual follow-up if chain < 3
+        let nextFollowUp = activeTopic?.follow_up_question || null;
+        if (dsaChainCount < 3) {
+          try {
+            const followUpRes = await fetchDsaFollowUp({
+              question: topic,
+              transcript,
+              chainCount: dsaChainCount,
+            });
+            if (followUpRes?.follow_up_question) {
+              nextFollowUp = followUpRes.follow_up_question;
+            }
+          } catch (fErr) {
+            console.warn('Could not generate dynamic follow-up, keeping existing:', fErr);
+          }
+        }
 
-      setCurrentAnalysis({
-        ...analysisData,
-        sessionId: saved?.id,
-      });
-      setCurrentView('feedback');
+        setActiveTopic((prev) => ({
+          ...prev,
+          follow_up_question: dsaChainCount >= 3 ? null : nextFollowUp,
+        }));
+
+        refreshStorageData();
+        setCurrentAnalysis({
+          ...analysisData,
+          sessionId: saved?.id,
+        });
+        setCurrentView('dsa_feedback');
+      } else {
+        // General Drill Analysis
+        const analysisData = await analyzeSpeech({
+          topic,
+          transcript,
+          durationSeconds,
+          timeToFirstWord,
+          longestPause,
+          pausesOver2s,
+          parentSessionId,
+        });
+
+        const saved = saveSession({
+          mode: 'general',
+          topic,
+          category: activeTopic?.category || 'General',
+          difficulty: activeTopic?.difficulty || 'Medium',
+          transcript,
+          duration_seconds: durationSeconds,
+          ...analysisData,
+          parent_session_id: parentSessionId,
+        });
+
+        refreshStorageData();
+        setCurrentAnalysis({
+          ...analysisData,
+          sessionId: saved?.id,
+        });
+        setCurrentView('feedback');
+      }
     } catch (err) {
       console.error('Error analyzing speech:', err);
       setAnalysisError(err.message || 'Failed to analyze speech response.');
@@ -149,7 +264,7 @@ export default function App() {
     }
   };
 
-  // Start follow-up practice round
+  // Start follow-up practice round for general practice
   const handleStartFollowUp = (followUpQuestion) => {
     setActiveTopic({
       topic: followUpQuestion,
@@ -157,23 +272,64 @@ export default function App() {
       difficulty: activeTopic?.difficulty || 'Medium',
       follow_up_question: null,
       parentSessionId: currentAnalysis?.sessionId || null,
+      mode: 'general',
+      roundNumber: 2,
     });
     setCurrentAnalysis(null);
     setCurrentView('practice');
   };
 
-  // Try again with identical topic
-  const handleTryAgain = () => {
+  // Start follow-up round for DSA interview
+  const handleStartDsaFollowUp = (followUpQuestion) => {
+    if (dsaChainCount >= 3) return;
+    const nextRound = dsaChainCount + 1;
+    setDsaChainCount(nextRound);
+
+    setActiveTopic({
+      topic: followUpQuestion,
+      subtopic: activeTopic?.subtopic || 'General DSA',
+      question_type: 'Follow-up Defense',
+      difficulty: activeTopic?.difficulty || 'Medium',
+      key_points: [],
+      follow_up_question: null,
+      parentSessionId: currentAnalysis?.sessionId || null,
+      mode: 'dsa',
+      roundNumber: nextRound,
+    });
     setCurrentAnalysis(null);
-    setCurrentView('practice');
+    setCurrentView('dsa_practice');
   };
 
-  // New topic flow
+  // Try again with identical topic / question
+  const handleTryAgain = () => {
+    setCurrentAnalysis(null);
+    if (activeTopic?.mode === 'dsa') {
+      setCurrentView('dsa_practice');
+    } else {
+      setCurrentView('practice');
+    }
+  };
+
+  // New general topic flow
   const handleNewTopic = () => {
     setActiveTopic(null);
     setCurrentAnalysis(null);
     setCurrentView('setup');
   };
+
+  // New DSA question flow
+  const handleNewDsaQuestion = () => {
+    setActiveTopic(null);
+    setCurrentAnalysis(null);
+    setDsaChainCount(1);
+    setCurrentView('dsa_setup');
+  };
+
+  const isCurrentDsa =
+    currentView === 'dsa_setup' ||
+    currentView === 'dsa_practice' ||
+    currentView === 'dsa_feedback' ||
+    activeTopic?.mode === 'dsa';
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
@@ -184,6 +340,7 @@ export default function App() {
         theme={theme}
         toggleTheme={toggleTheme}
         health={health}
+        isDsaMode={isCurrentDsa}
       />
 
       {/* Main Content Area */}
@@ -192,10 +349,12 @@ export default function App() {
           <HomePage
             stats={stats}
             onStartPractice={() => setCurrentView('setup')}
+            onStartDsaPractice={() => setCurrentView('dsa_setup')}
             onViewProgress={() => setCurrentView('progress')}
           />
         )}
 
+        {/* General Practice Setup */}
         {currentView === 'setup' && (
           <SetupPage
             onGenerateTopic={handleGenerateTopic}
@@ -205,7 +364,18 @@ export default function App() {
           />
         )}
 
-        {currentView === 'practice' && (
+        {/* DSA Setup */}
+        {currentView === 'dsa_setup' && (
+          <DsaSetupPage
+            onGenerateQuestion={handleGenerateDsaQuestion}
+            isLoading={isGeneratingTopic}
+            error={topicError}
+            onClearError={() => setTopicError(null)}
+          />
+        )}
+
+        {/* Practice Arena (Used for both General and DSA drills) */}
+        {(currentView === 'practice' || currentView === 'dsa_practice') && (
           <PracticePage
             topicData={activeTopic}
             speechRecognition={speechRecognition}
@@ -213,10 +383,11 @@ export default function App() {
             isLoadingAnalysis={isLoadingAnalysis}
             analysisError={analysisError}
             onClearAnalysisError={() => setAnalysisError(null)}
-            onCancelDrill={() => setCurrentView('setup')}
+            onCancelDrill={() => setCurrentView(activeTopic?.mode === 'dsa' ? 'dsa_setup' : 'setup')}
           />
         )}
 
+        {/* General Drill Feedback */}
         {currentView === 'feedback' && (
           <FeedbackPage
             analysis={currentAnalysis}
@@ -228,17 +399,33 @@ export default function App() {
           />
         )}
 
+        {/* DSA Interview Feedback */}
+        {currentView === 'dsa_feedback' && (
+          <DsaFeedbackPage
+            analysis={currentAnalysis}
+            topicData={activeTopic}
+            onTryAgain={handleTryAgain}
+            onNewQuestion={handleNewDsaQuestion}
+            onStartFollowUp={handleStartDsaFollowUp}
+            onFinish={() => setCurrentView('progress')}
+            chainCount={dsaChainCount}
+          />
+        )}
+
+        {/* Progress & Analytics Dashboard */}
         {currentView === 'progress' && (
           <ProgressPage
             stats={stats}
+            dsaStats={dsaStats}
             readiness={readiness}
             sessions={sessions}
             onStartPractice={() => setCurrentView('setup')}
+            onStartDsaPractice={() => setCurrentView('dsa_setup')}
           />
         )}
       </main>
 
-      {/* Minimal Footer */}
+      {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800/80 py-6 text-center text-xs text-slate-400">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>SpeakPrep AI • Real-Time 60-Second Speaking Drills</span>

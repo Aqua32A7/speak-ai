@@ -12,6 +12,12 @@ load_dotenv(dotenv_path=env_path)
 
 from models.schemas import (
     AnalyzeRequest,
+    DsaAnalyzeRequest,
+    DsaFollowUpRequest,
+    DsaFollowUpResponse,
+    DsaQuestionRequest,
+    DsaQuestionResponse,
+    DsaSpeechAnalysisResponse,
     FollowUpRequest,
     FollowUpResponse,
     HealthResponse,
@@ -113,6 +119,50 @@ async def generate_followup_endpoint(req: FollowUpRequest):
         transcript=req.transcript,
     )
     return FollowUpResponse(follow_up_question=follow_up_q)
+
+
+# ============================================================================
+# DSA Interview Mode Endpoints
+# ============================================================================
+
+@app.post("/api/dsa/question", response_model=DsaQuestionResponse)
+async def generate_dsa_question_endpoint(req: DsaQuestionRequest):
+    """Generates a verbal DSA interview question with key evaluation points."""
+    return await gemini_service.generate_dsa_question(
+        difficulty=req.difficulty,
+        subtopic_filter=req.subtopic_filter,
+        type_filter=req.type_filter,
+        recent_questions=req.recent_questions,
+        recent_subtopics=req.recent_subtopics,
+    )
+
+
+@app.post("/api/dsa/analyze", response_model=DsaSpeechAnalysisResponse)
+async def analyze_dsa_endpoint(req: DsaAnalyzeRequest):
+    """
+    Evaluates spoken DSA response comparing against expected key points,
+    verifying algorithmic accuracy and answer structure.
+    """
+    return await gemini_service.analyze_dsa_answer(
+        question=req.question,
+        transcript=req.transcript,
+        key_points=req.key_points,
+        duration_seconds=req.duration_seconds,
+        time_to_first_word=req.time_to_first_word_seconds,
+        longest_pause=req.longest_pause_seconds,
+        pauses_over_2s=req.pauses_over_2s_count,
+    )
+
+
+@app.post("/api/dsa/followup", response_model=DsaFollowUpResponse)
+async def generate_dsa_followup_endpoint(req: DsaFollowUpRequest):
+    """Generates a deeper contextual follow-up question for chained DSA rounds."""
+    follow_up_q = await gemini_service.generate_dsa_followup(
+        question=req.question,
+        transcript=req.transcript,
+        chain_count=req.chain_count,
+    )
+    return DsaFollowUpResponse(follow_up_question=follow_up_q)
 
 
 if __name__ == "__main__":

@@ -133,6 +133,11 @@ export default function PracticePage({
       longestPause: metrics.longestPause,
       pausesOver2s: metrics.pausesOver2s,
       parentSessionId: topicData.parentSessionId || null,
+      keyPoints: topicData.key_points || [],
+      subtopic: topicData.subtopic,
+      questionType: topicData.question_type,
+      mode: topicData.mode || 'general',
+      roundNumber: topicData.roundNumber || 1,
     });
   }, [finalTranscript, transcript, remainingSeconds, metrics, onFinishDrill, stopListening, topicData]);
 
@@ -193,6 +198,10 @@ export default function PracticePage({
         category={topicData?.category}
         difficulty={topicData?.difficulty}
         isFollowUp={Boolean(topicData?.parentSessionId)}
+        subtopic={topicData?.subtopic}
+        questionType={topicData?.question_type}
+        roundNumber={topicData?.roundNumber}
+        isDsa={topicData?.mode === 'dsa'}
       />
 
       {/* Practice Arena */}

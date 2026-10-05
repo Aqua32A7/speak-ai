@@ -96,3 +96,76 @@ export async function fetchFollowUp(topic, transcript) {
   });
   return handleResponse(response);
 }
+
+/**
+ * Generate a dynamic verbal DSA interview question with hidden key points
+ */
+export async function fetchDsaQuestion({
+  difficulty = 'Medium',
+  subtopicFilter = 'Surprise Me',
+  typeFilter = 'Surprise Me',
+  recentQuestions = [],
+  recentSubtopics = [],
+}) {
+  const response = await fetch(`${API_BASE_URL}/api/dsa/question`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      difficulty,
+      subtopic_filter: subtopicFilter,
+      type_filter: typeFilter,
+      recent_questions: recentQuestions,
+      recent_subtopics: recentSubtopics,
+    }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Analyze spoken DSA response against expected key points and answer structure
+ */
+export async function analyzeDsaAnswer({
+  question,
+  transcript,
+  keyPoints = [],
+  durationSeconds,
+  timeToFirstWord = 0.0,
+  longestPause = 0.0,
+  pausesOver2s = 0,
+  parentSessionId = null,
+  followUpChainCount = 0,
+}) {
+  const response = await fetch(`${API_BASE_URL}/api/dsa/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      question,
+      transcript,
+      key_points: keyPoints,
+      duration_seconds: durationSeconds,
+      time_to_first_word_seconds: timeToFirstWord,
+      longest_pause_seconds: longestPause,
+      pauses_over_2s_count: pausesOver2s,
+      parent_session_id: parentSessionId,
+      follow_up_chain_count: followUpChainCount,
+    }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Generate deeper contextual DSA follow-up question for chained rounds
+ */
+export async function fetchDsaFollowUp({ question, transcript, chainCount = 1 }) {
+  const response = await fetch(`${API_BASE_URL}/api/dsa/followup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      question,
+      transcript,
+      chain_count: chainCount,
+    }),
+  });
+  return handleResponse(response);
+}
+

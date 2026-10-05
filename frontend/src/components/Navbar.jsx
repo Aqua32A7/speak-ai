@@ -1,7 +1,9 @@
-import React from 'react';
-import { Mic, Moon, Sun, Activity, Sparkles } from 'lucide-react';
+import { Mic, Moon, Sun, Activity, Sparkles, Code2 } from 'lucide-react';
 
-export default function Navbar({ currentView, setCurrentView, theme, toggleTheme, health }) {
+export default function Navbar({ currentView, setCurrentView, theme, toggleTheme, health, isDsaMode }) {
+  const isPracticeActive = currentView === 'setup' || (currentView === 'practice' && !isDsaMode) || (currentView === 'feedback' && !isDsaMode);
+  const isDsaActive = currentView === 'dsa_setup' || currentView === 'dsa_practice' || (currentView === 'practice' && isDsaMode) || currentView === 'dsa_feedback' || (currentView === 'feedback' && isDsaMode);
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -45,13 +47,25 @@ export default function Navbar({ currentView, setCurrentView, theme, toggleTheme
           <button
             onClick={() => setCurrentView('setup')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              currentView === 'setup' || currentView === 'practice' || currentView === 'feedback'
+              isPracticeActive && !isDsaActive
                 ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold'
                 : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-            Practice Drill
+            <span>Practice Drill</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('dsa_setup')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              isDsaActive
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-semibold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            <Code2 className="w-3.5 h-3.5 text-emerald-500" />
+            <span>DSA Interview</span>
           </button>
 
           <button

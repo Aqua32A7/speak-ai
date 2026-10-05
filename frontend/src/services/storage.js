@@ -55,6 +55,19 @@ export function saveSession(session) {
       time_to_first_word_seconds: session.time_to_first_word_seconds || 0,
       longest_pause_seconds: session.longest_pause_seconds || 0,
       pauses_over_2s_count: session.pauses_over_2s_count || 0,
+      // DSA Interview Mode fields
+      mode: session.mode || 'general',
+      subtopic: session.subtopic || '',
+      question_type: session.question_type || '',
+      concept_correctness: session.concept_correctness || 0,
+      explanation_clarity: session.explanation_clarity || 0,
+      structure: session.structure || 0,
+      complexity_awareness: session.complexity_awareness || 0,
+      edge_case_awareness: session.edge_case_awareness || 0,
+      key_points: session.key_points || [],
+      covered_points: session.covered_points || [],
+      missed_points: session.missed_points || [],
+      misconceptions: session.misconceptions || [],
     };
 
     const updated = [newSession, ...sessions];
@@ -81,6 +94,116 @@ export function getRecentTopics(limit = 15) {
     }
   }
   return topics;
+}
+
+/**
+ * Get recent DSA questions to pass to Gemini to avoid duplicates
+ */
+export function getRecentDsaQuestions(limit = 15) {
+  const sessions = getSessions();
+  const questions = [];
+  const seen = new Set();
+  for (const s of sessions) {
+    if (s.mode === 'dsa' && s.topic && !seen.has(s.topic.toLowerCase())) {
+      seen.add(s.topic.toLowerCase());
+      questions.push(s.topic);
+      if (questions.length >= limit) break;
+    }
+  }
+  return questions;
+}
+
+/**
+ * Compute aggregate DSA speaking statistics
+ */
+export function getDsaStats() {
+  const sessions = getSessions().filter(s => s.mode === 'dsa');
+  const total = sessions.length;
+
+  if (total === 0) {
+    return {
+      total_dsa: 0,
+      avg_overall_score: 0,
+      avg_concept_score: 0,
+      avg_clarity_score: 0,
+      avg_structure_score: 0,
+      avg_complexity_score: 0,
+      avg_edge_case_score: 0,
+      subtopic_stats: {},
+      weakest_subtopics: [],
+      recent_dsa_questions: [],
+    };
+  }
+
+  let totalOverall = 0;
+  let totalConcept = 0;
+  let totalClarity = 0;
+  let totalStructure = 0;
+  let totalComplexity = 0;
+  let totalEdgeCase = 0;
+  const subtopicMap = {};
+
+  for (const s of sessions) {
+    totalOverall += s.overall_score || 0;
+    totalConcept += s.concept_correctness || 0;
+    totalClarity += s.explanation_clarity || 0;
+    totalStructure += s.structure || 0;
+    totalComplexity += s.complexity_awareness || 0;
+    totalEdgeCase += s.edge_case_awareness || 0;
+
+    const sub = s.subtopic || 'General DSA';
+    if (!subtopicMap[sub]) {
+      subtopicMap[sub] = { count: 0, total_score: 0, total_concept: 0, total_complexity: 0 };
+    }
+    subtopicMap[sub].count++;
+    subtopicMap[sub].total_score += s.overall_score || 0;
+    subtopicMap[sub].total_concept += s.concept_correctness || 0;
+    subtopicMap[sub].total_complexity += s.complexity_awareness || 0;
+  }
+
+  const subtopic_stats = {};
+  const subtopicArray = [];
+
+  for (const [sub, data] of Object.entries(subtopicMap)) {
+    const avgScore = Number((data.total_score / data.count).toFixed(1));
+    subtopic_stats[sub] = {
+      count: data.count,
+      avg_score: avgScore,
+      avg_concept: Number((data.total_concept / data.count).toFixed(1)),
+      avg_complexity: Number((data.total_complexity / data.count).toFixed(1)),
+    };
+    subtopicArray.push({
+      subtopic: sub,
+      count: data.count,
+      avg_score: avgScore,
+    });
+  }
+
+  // Weakest subtopics (sorted by lowest avg_score)
+  subtopicArray.sort((a, b) => a.avg_score - b.avg_score);
+  const weakest_subtopics = subtopicArray.slice(0, 3);
+
+  const recent_dsa_questions = sessions.slice(0, 5).map(s => ({
+    id: s.id,
+    topic: s.topic,
+    subtopic: s.subtopic,
+    question_type: s.question_type,
+    score: s.overall_score,
+    timestamp: s.timestamp,
+  }));
+
+  return {
+    total_dsa: total,
+    avg_overall_score: Number((totalOverall / total).toFixed(1)),
+    avg_concept_score: Number((totalConcept / total).toFixed(1)),
+    avg_clarity_score: Number((totalClarity / total).toFixed(1)),
+    avg_structure_score: Number((totalStructure / total).toFixed(1)),
+    avg_complexity_score: Number((totalComplexity / total).toFixed(1)),
+    avg_edge_case_score: Number((totalEdgeCase / total).toFixed(1)),
+    subtopic_stats,
+    weakest_subtopics,
+    recent_dsa_questions,
+  };
 }
 
 /**
@@ -226,12 +349,20 @@ export function getInterviewReadiness() {
   let sumFluency = 0;
 
   for (const s of recent) {
-    sumClarity += s.clarity_score || 0;
-    sumGrammar += s.grammar_score || 0;
-    sumTech += s.technical_depth_score || 0;
-    sumRelevance += s.relevance_score || 0;
-    sumConfidence += s.confidence_score || 0;
-    sumFluency += s.fluency_score || 0;
+    // If it's a DSA session, map DSA metrics sensibly:
+    const clarity = s.clarity_score || s.explanation_clarity || 0;
+    const grammar = s.grammar_score || s.explanation_clarity || 0;
+    const tech = s.technical_depth_score || s.complexity_awareness || s.concept_correctness || 0;
+    const relevance = s.relevance_score || s.concept_correctness || 0;
+    const confidence = s.confidence_score || s.structure || 0;
+    const fluency = s.fluency_score || 0;
+
+    sumClarity += clarity;
+    sumGrammar += grammar;
+    sumTech += tech;
+    sumRelevance += relevance;
+    sumConfidence += confidence;
+    sumFluency += fluency;
   }
 
   const avgClarity = sumClarity / count;

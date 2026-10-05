@@ -1,8 +1,8 @@
 import React from 'react';
-import { Play, Sparkles, Clock, Target, Award, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Play, Sparkles, Clock, Target, Award, ArrowRight, CheckCircle2, Code2, Terminal } from 'lucide-react';
 import StatCard from '../components/StatCard';
 
-export default function HomePage({ stats, onStartPractice, onViewProgress }) {
+export default function HomePage({ stats, onStartPractice, onStartDsaPractice, onViewProgress }) {
   const today = stats?.today_stats || {
     sessions_completed: 0,
     avg_speaking_time: 0,
@@ -29,16 +29,24 @@ export default function HomePage({ stats, onStartPractice, onViewProgress }) {
 
           <p className="text-base sm:text-xl text-indigo-100/90 font-normal leading-relaxed">
             Practice speaking. Build confidence. Get interview-ready.
-            Master technical explanations and behavioral answers through structured 60-second drills with real-time Gemini AI coaching.
+            Master technical explanations, DSA concepts, and behavioral answers through structured 60-second drills with real-time Gemini AI coaching.
           </p>
 
-          <div className="pt-2 flex flex-wrap items-center gap-4">
+          <div className="pt-2 flex flex-wrap items-center gap-3">
             <button
               onClick={onStartPractice}
               className="px-6 py-3.5 rounded-2xl bg-white text-indigo-900 font-bold text-sm sm:text-base shadow-lg hover:bg-indigo-50 active:scale-95 transition-all flex items-center gap-2.5 group cursor-pointer"
             >
               <Play className="w-4 h-4 fill-indigo-900 group-hover:scale-110 transition-transform" />
-              <span>Start 1-Minute Practice</span>
+              <span>General Practice Drill</span>
+            </button>
+
+            <button
+              onClick={onStartDsaPractice}
+              className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2.5 cursor-pointer"
+            >
+              <Code2 className="w-4 h-4 stroke-[2.5]" />
+              <span>DSA Interview Mode</span>
             </button>
 
             <button
@@ -49,6 +57,39 @@ export default function HomePage({ stats, onStartPractice, onViewProgress }) {
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* DSA Interview Mode Spotlight Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-950 to-indigo-950 text-white p-6 sm:p-8 border border-emerald-500/30 shadow-xl">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+              <Terminal className="w-3.5 h-3.5" />
+              <span>NEW FEATURE • DSA INTERVIEW MODE</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+              Explain Algorithms & Data Structures Out Loud
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Designed for candidates with 400+ LeetCode problems solved. Practice oral explanations of intuition, complexity, trade-offs, and edge cases with up to 3 chained interviewer follow-ups.
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
+              <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">14 Subtopics</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">6 Question Types</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">Chained Follow-ups</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">Key Points Checklist</span>
+            </div>
+          </div>
+
+          <button
+            onClick={onStartDsaPractice}
+            className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Terminal className="w-4 h-4" />
+            <span>Start DSA Drill</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
