@@ -1,6 +1,26 @@
-import { Mic, Moon, Sun, Activity, Sparkles, Code2, BookOpen, Compass, FolderGit2, Settings } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mic, Moon, Sun, Activity, Sparkles, Code2, BookOpen, Compass, FolderGit2, Settings, Volume2, VolumeX } from 'lucide-react';
+import { isVoiceMuted, toggleVoiceMute } from '../services/storage';
 
 export default function Navbar({ currentView, setCurrentView, theme, toggleTheme, health, isDsaMode, isCoreMode, isProjectMode }) {
+  const [muted, setMuted] = useState(isVoiceMuted);
+
+  useEffect(() => {
+    const handleSettingsChanged = () => {
+      setMuted(isVoiceMuted());
+    };
+    window.addEventListener('speakprep_settings_changed', handleSettingsChanged);
+    window.addEventListener('storage', handleSettingsChanged);
+    return () => {
+      window.removeEventListener('speakprep_settings_changed', handleSettingsChanged);
+      window.removeEventListener('storage', handleSettingsChanged);
+    };
+  }, []);
+
+  const handleToggleMute = () => {
+    const next = toggleVoiceMute();
+    setMuted(next);
+  };
   const isPracticeActive = currentView === 'setup' || (currentView === 'practice' && !isDsaMode && !isCoreMode && !isProjectMode) || (currentView === 'feedback' && !isDsaMode && !isCoreMode && !isProjectMode);
   const isDsaActive = currentView === 'dsa_setup' || currentView === 'dsa_practice' || (currentView === 'practice' && isDsaMode) || currentView === 'dsa_feedback' || (currentView === 'feedback' && isDsaMode);
   const isCoreActive = currentView === 'core_setup' || currentView === 'core_practice' || (currentView === 'practice' && isCoreMode) || currentView === 'core_feedback' || (currentView === 'feedback' && isCoreMode);
@@ -135,6 +155,20 @@ export default function Navbar({ currentView, setCurrentView, theme, toggleTheme
               {health?.gemini_configured ? health?.model : 'API Ready'}
             </span>
           </div>
+
+          {/* Voice Audio Mute Toggle */}
+          <button
+            onClick={handleToggleMute}
+            aria-label={muted ? 'Unmute voice interviewer' : 'Mute voice interviewer'}
+            title={muted ? 'Voice Interviewer Muted (Click to Unmute)' : 'Voice Interviewer Active (Click to Mute)'}
+            className={`p-2 rounded-xl transition-colors cursor-pointer ${
+              muted
+                ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
 
           {/* Settings */}
           <button

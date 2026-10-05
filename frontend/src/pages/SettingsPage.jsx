@@ -10,6 +10,10 @@ import {
   FolderGit2,
   Layers,
   History,
+  Volume2,
+  Square,
+  Play,
+  Sparkles,
 } from 'lucide-react';
 import {
   getUserProfile,
@@ -21,8 +25,22 @@ import {
   getDsaPlatforms,
   clearAllUserData,
 } from '../services/storage';
+import { useSpeechSynthesis } from '../services/useSpeechSynthesis';
 
 export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
+  // Speech synthesis hook
+  const {
+    voices,
+    selectedVoice,
+    selectVoice,
+    speechRate,
+    setSpeechRate,
+    speak,
+    cancel,
+    isSpeaking,
+    isSupported: isTtsSupported,
+  } = useSpeechSynthesis();
+
   // Profile state
   const [name, setName] = useState('');
   const [targetRole, setTargetRole] = useState('');
@@ -36,6 +54,10 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
 
   // Settings state
   const [includeProjectsInRandom, setIncludeProjectsInRandom] = useState(false);
+  const [voiceInterviewer, setVoiceInterviewer] = useState(true);
+  const [voiceFeedback, setVoiceFeedback] = useState(true);
+  const [selectedVoiceUri, setSelectedVoiceUri] = useState('');
+  const [voiceSpeed, setVoiceSpeed] = useState(1.0);
 
   // Status state
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -62,11 +84,22 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
 
     const currentSettings = getSettings();
     setIncludeProjectsInRandom(Boolean(currentSettings.include_projects_in_random_topics));
+    setVoiceInterviewer(currentSettings.voice_interviewer !== false);
+    setVoiceFeedback(currentSettings.voice_feedback !== false);
+    setSelectedVoiceUri(currentSettings.voice_uri || '');
+    setVoiceSpeed(currentSettings.voice_speed || 1.0);
 
     setSessionCount(getSessions().length);
     setProjectCount(getUserProjects().length);
     setPlatformCount(getDsaPlatforms().length);
   }, []);
+
+  // Sync selected voice URI when voices load if none selected yet
+  useEffect(() => {
+    if (!selectedVoiceUri && selectedVoice) {
+      setSelectedVoiceUri(selectedVoice.voiceURI);
+    }
+  }, [selectedVoice, selectedVoiceUri]);
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -89,6 +122,10 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
     saveUserProfile(updatedProfile);
     saveSettings({
       include_projects_in_random_topics: includeProjectsInRandom,
+      voice_interviewer: voiceInterviewer,
+      voice_feedback: voiceFeedback,
+      voice_uri: selectedVoiceUri || null,
+      voice_speed: Number(voiceSpeed) || 1.0,
     });
 
     if (onProfileUpdated) onProfileUpdated(updatedProfile);
@@ -282,6 +319,155 @@ export default function SettingsPage({ onDataCleared, onProfileUpdated }) {
                 className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Voice Interviewer Settings */}
+        <div className="p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
+              <Volume2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                Voice Interviewer Settings
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Configure simulated spoken questions, speed pacing, and audio feedback summaries.
+              </p>
+            </div>
+          </div>
+
+          {/* Toggle: Voice Interviewer */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                Voice Interviewer (Read questions aloud)
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                The interviewer reads out the question or follow-up before the 10-second preparation countdown begins. (Default: ON)
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={voiceInterviewer}
+                onChange={(e) => setVoiceInterviewer(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-violet-600"></div>
+            </label>
+          </div>
+
+          {/* Toggle: Voice Feedback */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                Voice Feedback (Spoken summary)
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Automatically speak a concise 3-5 sentence coaching summary when the evaluation screen loads. (Default: ON)
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={voiceFeedback}
+                onChange={(e) => setVoiceFeedback(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-violet-600"></div>
+            </label>
+          </div>
+
+          {/* Voice Picker Dropdown */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Interviewer Voice
+            </label>
+            <select
+              value={selectedVoiceUri}
+              onChange={(e) => {
+                setSelectedVoiceUri(e.target.value);
+                selectVoice(e.target.value);
+              }}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            >
+              {voices.length === 0 ? (
+                <option value="">Default System Voice</option>
+              ) : (
+                voices.map((v) => {
+                  const isRecommended =
+                    v.lang === 'en-IN' ||
+                    /natural|google|neural|samantha|karen|daniel/i.test(v.name);
+                  return (
+                    <option key={v.voiceURI} value={v.voiceURI}>
+                      {v.name} ({v.lang}) {isRecommended ? '★ Recommended' : ''}
+                    </option>
+                  );
+                })
+              )}
+            </select>
+          </div>
+
+          {/* Speech Speed Selector */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+              Speaking Pace
+            </label>
+            <div className="grid grid-cols-3 gap-2.5">
+              {[
+                { speed: 0.8, label: '0.8x (Deliberate)' },
+                { speed: 1.0, label: '1.0x (Normal)' },
+                { speed: 1.2, label: '1.2x (Fast / Pace)' },
+              ].map(({ speed, label }) => (
+                <button
+                  key={speed}
+                  type="button"
+                  onClick={() => {
+                    setVoiceSpeed(speed);
+                    setSpeechRate(speed);
+                  }}
+                  className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                    Number(voiceSpeed) === speed
+                      ? 'bg-violet-50 border-violet-500 text-violet-700 dark:bg-violet-950/60 dark:border-violet-600 dark:text-violet-300 shadow-sm'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Test Voice & Privacy Note */}
+          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                if (isSpeaking) {
+                  cancel();
+                } else {
+                  speak('Hello! I am your AI interviewer. I will read your questions and summarize your feedback.');
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-100 dark:bg-violet-900/50 hover:bg-violet-200 dark:hover:bg-violet-800/60 text-violet-700 dark:text-violet-300 text-xs font-semibold transition active:scale-95 cursor-pointer self-start sm:self-auto"
+            >
+              {isSpeaking ? (
+                <>
+                  <Square className="w-3.5 h-3.5 fill-current" />
+                  <span>Stop Test Audio</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Test Voice</span>
+                </>
+              )}
+            </button>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+              🔒 Speech synthesis runs entirely in your browser. No voice audio is sent to external servers.
+            </p>
           </div>
         </div>
 

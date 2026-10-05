@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic, AlertTriangle, ArrowRight, Play, RotateCcw, CheckCircle } from 'lucide-react';
+import { Mic, AlertTriangle, ArrowRight, Play, RotateCcw, CheckCircle, Volume2, Square, FastForward } from 'lucide-react';
 import TopicCard from '../components/TopicCard';
 import TimerRing from '../components/TimerRing';
 import TranscriptBox from '../components/TranscriptBox';
 import LoadingState from '../components/LoadingState';
 import ErrorBanner from '../components/ErrorBanner';
+import { useSpeechSynthesis } from '../services/useSpeechSynthesis';
+import { cleanTextForSpeech } from '../utils/speechSummary';
+import { getSettings, isVoiceMuted } from '../services/storage';
 
 const PREP_DURATION = 10;
 const SPEAK_DURATION = 60;
@@ -18,15 +21,29 @@ export default function PracticePage({
   onClearAnalysisError,
   onCancelDrill,
 }) {
-  // State machine: 'READY' | 'PREPARING' | 'SPEAKING' | 'TIMES_UP' | 'ANALYZING'
-  const [phase, setPhase] = useState('PREPARING');
+  // Check settings for Voice Interviewer feature
+  const settings = getSettings();
+  const isInterviewerVoiceActive = settings.voice_interviewer !== false && !isVoiceMuted();
+
+  // Speech synthesis hook
+  const {
+    speak,
+    cancel: cancelTTS,
+    isSpeaking: isTtsSpeaking,
+    isSupported: isTtsSupported,
+  } = useSpeechSynthesis();
+
+  // State machine: 'READING_QUESTION' | 'PREPARING' | 'SPEAKING' | 'TIMES_UP' | 'ANALYZING' | 'READY'
+  const [phase, setPhase] = useState(() => (isInterviewerVoiceActive ? 'READING_QUESTION' : 'PREPARING'));
   const [remainingSeconds, setRemainingSeconds] = useState(PREP_DURATION);
   const [localError, setLocalError] = useState(null);
+  const [activeSpeechTarget, setActiveSpeechTarget] = useState(null); // 'question' | 'primer' | null
 
   // High precision timestamp references
   const phaseStartTimeRef = useRef(Date.now());
   const timerIntervalRef = useRef(null);
   const actualSpeakingDurationRef = useRef(0);
+  const questionSpeechStartedRef = useRef(false);
 
   const {
     isSupported,
@@ -43,20 +60,66 @@ export default function PracticePage({
     devInjectMockText,
   } = speechRecognition;
 
-  // Cleanup timers on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
+      cancelTTS();
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
       stopListening();
     };
-  }, [stopListening]);
+  }, [stopListening, cancelTTS]);
 
-  // Transition to SPEAKING phase
+  // Read question aloud during READING_QUESTION phase
+  useEffect(() => {
+    if (phase === 'READING_QUESTION') {
+      if (!isTtsSupported || isVoiceMuted()) {
+        setPhase('PREPARING');
+        return;
+      }
+
+      const rawQuestion = topicData?.topic || '';
+      const cleaned = cleanTextForSpeech(rawQuestion);
+      const questionText = topicData?.parentSessionId
+        ? `Follow-up question: ${cleaned}`
+        : `Here is your interview question: ${cleaned}`;
+
+      setActiveSpeechTarget('question');
+      questionSpeechStartedRef.current = true;
+
+      // Fallback timer: proceed to PREPARING after 16s if speech engine stalls or gets blocked
+      const fallbackTimer = setTimeout(() => {
+        setActiveSpeechTarget(null);
+        setPhase('PREPARING');
+      }, 16000);
+
+      speak(questionText, {
+        onEnd: () => {
+          clearTimeout(fallbackTimer);
+          setActiveSpeechTarget(null);
+          setPhase('PREPARING');
+        },
+        onError: () => {
+          clearTimeout(fallbackTimer);
+          setActiveSpeechTarget(null);
+          setPhase('PREPARING');
+        },
+      });
+
+      return () => {
+        clearTimeout(fallbackTimer);
+      };
+    }
+  }, [phase, topicData, speak, isTtsSupported]);
+
+  // Transition to SPEAKING phase - CRITICAL MIC CONFLICT SAFEGUARD: cancel TTS before mic starts
   const beginSpeaking = useCallback(() => {
+    cancelTTS();
+    setActiveSpeechTarget(null);
+
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    
+
     setPhase('SPEAKING');
     setRemainingSeconds(SPEAK_DURATION);
     phaseStartTimeRef.current = Date.now();
@@ -77,7 +140,7 @@ export default function PracticePage({
         setPhase('TIMES_UP');
       }
     }, 100);
-  }, [resetTranscript, startListening, stopListening]);
+  }, [cancelTTS, resetTranscript, startListening, stopListening]);
 
   // Handle Prep countdown
   useEffect(() => {
@@ -115,6 +178,7 @@ export default function PracticePage({
   // Submit collected transcript to backend for Gemini analysis
   const submitSpeech = useCallback(() => {
     stopListening();
+    cancelTTS();
     const finalContent = (finalTranscript || transcript).trim();
     const duration = Math.max(1, actualSpeakingDurationRef.current || (SPEAK_DURATION - remainingSeconds) || 60);
 
@@ -140,8 +204,50 @@ export default function PracticePage({
       roundNumber: topicData.roundNumber || 1,
       subject: topicData.subject || '',
       primer: topicData.primer || null,
+      project_id: topicData.project_id || null,
+      project_name: topicData.project_name || '',
     });
-  }, [finalTranscript, transcript, remainingSeconds, metrics, onFinishDrill, stopListening, topicData]);
+  }, [finalTranscript, transcript, remainingSeconds, metrics, onFinishDrill, stopListening, cancelTTS, topicData]);
+
+  // Skip question reading directly to prep countdown
+  const handleSkipQuestionSpeech = () => {
+    cancelTTS();
+    setActiveSpeechTarget(null);
+    setPhase('PREPARING');
+  };
+
+  // Replay question audio
+  const handleReplayQuestion = () => {
+    if (isTtsSpeaking && activeSpeechTarget === 'question') {
+      cancelTTS();
+      setActiveSpeechTarget(null);
+    } else {
+      cancelTTS();
+      setActiveSpeechTarget('question');
+      const textToPlay = cleanTextForSpeech(topicData?.topic || '');
+      speak(textToPlay, {
+        onEnd: () => setActiveSpeechTarget(null),
+        onError: () => setActiveSpeechTarget(null),
+      });
+    }
+  };
+
+  // Play primer audio
+  const handlePlayPrimer = () => {
+    if (!topicData?.primer) return;
+    if (isTtsSpeaking && activeSpeechTarget === 'primer') {
+      cancelTTS();
+      setActiveSpeechTarget(null);
+    } else {
+      cancelTTS();
+      setActiveSpeechTarget('primer');
+      const textToPlay = cleanTextForSpeech(topicData.primer);
+      speak(textToPlay, {
+        onEnd: () => setActiveSpeechTarget(null),
+        onError: () => setActiveSpeechTarget(null),
+      });
+    }
+  };
 
   // Early finish trigger
   const handleFinishEarly = () => {
@@ -149,15 +255,25 @@ export default function PracticePage({
     const elapsed = (Date.now() - phaseStartTimeRef.current) / 1000;
     actualSpeakingDurationRef.current = elapsed;
     stopListening();
+    cancelTTS();
     setPhase('TIMES_UP');
   };
 
   // Retry from ready
   const handleRestart = () => {
+    cancelTTS();
     setLocalError(null);
     onClearAnalysisError();
     resetTranscript();
-    setPhase('PREPARING');
+    setPhase(isInterviewerVoiceActive ? 'READING_QUESTION' : 'PREPARING');
+  };
+
+  // Cancel drill
+  const handleCancel = () => {
+    cancelTTS();
+    stopListening();
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    onCancelDrill();
   };
 
   // If loading analysis
@@ -194,7 +310,7 @@ export default function PracticePage({
         }}
       />
 
-      {/* Topic Card */}
+      {/* Topic Card with Audio Controls */}
       <TopicCard
         topic={topicData?.topic}
         category={topicData?.category}
@@ -209,6 +325,12 @@ export default function PracticePage({
         projectName={topicData?.project_name}
         subject={topicData?.subject}
         primer={topicData?.primer}
+        onSpeakQuestion={handleReplayQuestion}
+        isSpeakingQuestion={isTtsSpeaking && activeSpeechTarget === 'question'}
+        onStopSpeaking={() => { cancelTTS(); setActiveSpeechTarget(null); }}
+        onSpeakPrimer={topicData?.primer ? handlePlayPrimer : undefined}
+        isSpeakingPrimer={isTtsSpeaking && activeSpeechTarget === 'primer'}
+        disableAudio={phase === 'SPEAKING' || phase === 'TIMES_UP' || phase === 'ANALYZING'}
       />
 
       {/* Practice Arena */}
@@ -216,6 +338,21 @@ export default function PracticePage({
         
         {/* Phase Header */}
         <div className="text-center">
+          {phase === 'READING_QUESTION' && (
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                <Volume2 className="w-3.5 h-3.5 animate-pulse text-indigo-600 dark:text-indigo-400" />
+                <span>Voice Interviewer</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1">
+                Reading your interview question aloud...
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Listen and structure your approach. The 10-second mental prep countdown will begin immediately after.
+              </p>
+            </div>
+          )}
+
           {phase === 'PREPARING' && (
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
@@ -264,8 +401,8 @@ export default function PracticePage({
         {/* Circular Progress Ring Timer */}
         {phase !== 'TIMES_UP' && (
           <TimerRing
-            totalSeconds={phase === 'PREPARING' ? PREP_DURATION : SPEAK_DURATION}
-            remainingSeconds={remainingSeconds}
+            totalSeconds={phase === 'READING_QUESTION' ? PREP_DURATION : (phase === 'PREPARING' ? PREP_DURATION : SPEAK_DURATION)}
+            remainingSeconds={phase === 'READING_QUESTION' ? PREP_DURATION : remainingSeconds}
             phase={phase}
             isListening={isListening}
           />
@@ -273,6 +410,16 @@ export default function PracticePage({
 
         {/* Action button overrides */}
         <div className="flex items-center gap-3">
+          {phase === 'READING_QUESTION' && (
+            <button
+              onClick={handleSkipQuestionSpeech}
+              className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <FastForward className="w-4 h-4" />
+              <span>Skip Voice & Start Prep</span>
+            </button>
+          )}
+
           {phase === 'PREPARING' && (
             <button
               onClick={beginSpeaking}
@@ -303,8 +450,8 @@ export default function PracticePage({
           )}
 
           <button
-            onClick={onCancelDrill}
-            className="px-4 py-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            onClick={handleCancel}
+            className="px-4 py-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
           >
             Cancel
           </button>

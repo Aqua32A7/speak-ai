@@ -106,6 +106,7 @@ class GeminiAnalysis(BaseModel):
     better_phrases: List[BetterPhrase] = Field(..., description="Alternative phrases replacing conversational or clunky expressions")
     sample_answer: str = Field(..., description="Realistic 60-second interview answer with bracketed useful phrases")
     next_focus_area: str = Field(..., description="Single highest-leverage skill to focus on in the next drill")
+    spoken_summary: Optional[str] = Field(default=None, max_length=500, description="Short, natural 2-4 sentence spoken summary of feedback for text-to-speech")
 
 
 class SpeechAnalysisResponse(BaseModel):
@@ -125,6 +126,7 @@ class SpeechAnalysisResponse(BaseModel):
     better_phrases: List[BetterPhrase]
     sample_answer: str
     next_focus_area: str
+    spoken_summary: Optional[str] = None
     # Deterministic metrics computed in code
     words_per_minute: float = Field(..., description="Deterministically calculated WPM based on transcript word count and duration")
     word_count: int = Field(..., description="Total word count of the transcript")
@@ -293,6 +295,7 @@ class GeminiDsaAnalysis(BaseModel):
     strengths: List[str] = Field(..., description="2-4 positive highlights from the candidate's explanation")
     sample_answer: str = Field(..., description="Model 60-second answer in the tone of a strong candidate with bracketed highlights")
     next_focus_area: str = Field(..., description="The single highest-leverage skill to focus on in the next DSA drill")
+    spoken_summary: Optional[str] = Field(default=None, max_length=500, description="Short, natural 2-4 sentence spoken summary of feedback for text-to-speech")
 
 
 class DsaSpeechAnalysisResponse(BaseModel):
@@ -314,6 +317,7 @@ class DsaSpeechAnalysisResponse(BaseModel):
     strengths: List[str]
     sample_answer: str
     next_focus_area: str
+    spoken_summary: Optional[str] = None
     # Deterministic metrics
     words_per_minute: float
     word_count: int
@@ -401,6 +405,7 @@ class GeminiCoreAnalysis(BaseModel):
     sample_answer: str = Field(..., description="Realistic 60s candidate answer with bracketed highlights")
     refresher: CoreConceptRefresher = Field(..., description="Post-drill concept refresher with concise explanation and remember points")
     next_focus_area: str = Field(..., description="Highest-leverage topic or skill to focus on next")
+    spoken_summary: Optional[str] = Field(default=None, max_length=500, description="Short, natural 2-4 sentence spoken summary of feedback for text-to-speech")
 
 
 class CoreSpeechAnalysisResponse(BaseModel):
@@ -423,6 +428,7 @@ class CoreSpeechAnalysisResponse(BaseModel):
     sample_answer: str
     refresher: CoreConceptRefresher
     next_focus_area: str
+    spoken_summary: Optional[str] = None
     # Deterministic metrics
     words_per_minute: float
     word_count: int
@@ -531,6 +537,7 @@ class GeminiProjectAnswerAnalysis(BaseModel):
     strengths: List[str] = Field(..., description="2-4 positive highlights from the candidate's explanation")
     sample_answer: str = Field(..., description="Realistic 60s candidate answer with bracketed highlights")
     next_focus_area: str = Field(..., description="Highest-leverage skill or angle to focus on in next drill")
+    spoken_summary: Optional[str] = Field(default=None, max_length=500, description="Short, natural 2-4 sentence spoken summary of feedback for text-to-speech")
 
 
 class ProjectSpeechAnalysisResponse(BaseModel):
@@ -551,6 +558,7 @@ class ProjectSpeechAnalysisResponse(BaseModel):
     strengths: List[str]
     sample_answer: str
     next_focus_area: str
+    spoken_summary: Optional[str] = None
     # Deterministic metrics
     words_per_minute: float
     word_count: int

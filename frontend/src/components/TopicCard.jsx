@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, Zap, HelpCircle } from 'lucide-react';
+import { Tag, Zap, HelpCircle, Volume2, Square } from 'lucide-react';
 
 export default function TopicCard({
   topic,
@@ -15,6 +15,12 @@ export default function TopicCard({
   projectName,
   subject,
   primer,
+  onSpeakQuestion,
+  isSpeakingQuestion = false,
+  onStopSpeaking,
+  onSpeakPrimer,
+  isSpeakingPrimer = false,
+  disableAudio = false,
 }) {
   const getDifficultyColor = (diff) => {
     switch (diff?.toLowerCase()) {
@@ -103,9 +109,34 @@ export default function TopicCard({
 
       {/* Primer Card if present */}
       {primer && (
-        <div className="p-4 rounded-xl bg-violet-50/70 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-900/60 space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-violet-800 dark:text-violet-300">
-            <span>📖 Concept Primer (Read & Prepare)</span>
+        <div className="p-4 rounded-xl bg-violet-50/70 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-900/60 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-violet-800 dark:text-violet-300">
+              <span>📖 Concept Primer (Read & Prepare)</span>
+            </div>
+            {onSpeakPrimer && !disableAudio && (
+              <button
+                type="button"
+                onClick={isSpeakingPrimer ? onStopSpeaking : onSpeakPrimer}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  isSpeakingPrimer
+                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                    : 'bg-violet-100/80 hover:bg-violet-200/80 text-violet-700 dark:bg-violet-900/60 dark:hover:bg-violet-800/60 dark:text-violet-300'
+                }`}
+              >
+                {isSpeakingPrimer ? (
+                  <>
+                    <Square className="w-3 h-3 fill-current" />
+                    <span>Stop</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3 h-3" />
+                    <span>Listen</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
           <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-normal">
             {primer}
@@ -113,10 +144,30 @@ export default function TopicCard({
         </div>
       )}
 
-      {/* Main topic statement */}
-      <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-snug">
-        {topic || 'Loading interview speaking drill...'}
-      </h2>
+      {/* Main topic statement + Audio Button */}
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-snug">
+          {topic || 'Loading interview speaking drill...'}
+        </h2>
+        {onSpeakQuestion && !disableAudio && topic && (
+          <button
+            type="button"
+            onClick={isSpeakingQuestion ? onStopSpeaking : onSpeakQuestion}
+            title={isSpeakingQuestion ? 'Stop speaking question' : 'Read question aloud'}
+            className={`p-2 rounded-xl shrink-0 transition-all cursor-pointer shadow-sm ${
+              isSpeakingQuestion
+                ? 'bg-rose-600 text-white animate-pulse'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200'
+            }`}
+          >
+            {isSpeakingQuestion ? (
+              <Square className="w-4 h-4 fill-white" />
+            ) : (
+              <Volume2 className="w-4 h-4" />
+            )}
+          </button>
+        )}
+      </div>
 
       {/* Subtext prompt helper */}
       <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">

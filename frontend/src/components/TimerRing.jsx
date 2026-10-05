@@ -1,10 +1,10 @@
 import React from 'react';
-import { Mic, Radio } from 'lucide-react';
+import { Mic, Radio, Volume2 } from 'lucide-react';
 
 export default function TimerRing({
   totalSeconds = 60,
   remainingSeconds = 60,
-  phase = 'SPEAKING', // 'PREPARING' or 'SPEAKING'
+  phase = 'SPEAKING', // 'READING_QUESTION', 'PREPARING', or 'SPEAKING'
   isListening = false,
 }) {
   const size = 220;
@@ -16,9 +16,11 @@ export default function TimerRing({
   const progressRatio = Math.max(0, Math.min(1, remainingSeconds / totalSeconds));
   const strokeDashoffset = circumference * (1 - progressRatio);
 
-  // Dynamic stroke color based on remaining time
+  // Dynamic stroke color based on phase and remaining time
   let strokeColor = '#6366f1'; // Indigo for prep
-  if (phase === 'SPEAKING') {
+  if (phase === 'READING_QUESTION') {
+    strokeColor = '#8b5cf6'; // Violet for listening
+  } else if (phase === 'SPEAKING') {
     if (remainingSeconds <= 5) {
       strokeColor = '#ef4444'; // Red
     } else if (remainingSeconds <= 15) {
@@ -65,16 +67,27 @@ export default function TimerRing({
 
         {/* Central Display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none">
-          <span className="text-4xl sm:text-5xl font-extrabold tracking-tighter font-mono text-slate-900 dark:text-white">
-            {formattedTime}
-          </span>
-          <span className="text-xs font-semibold tracking-wider uppercase mt-1 text-slate-500 dark:text-slate-400">
-            {phase === 'PREPARING' ? 'Get Ready' : 'Speak Now'}
-          </span>
+          {phase === 'READING_QUESTION' ? (
+            <div className="flex flex-col items-center justify-center">
+              <Volume2 className="w-12 h-12 text-violet-600 dark:text-violet-400 animate-pulse" />
+              <span className="text-xs font-semibold tracking-wider uppercase mt-2 text-violet-600 dark:text-violet-400">
+                Listening
+              </span>
+            </div>
+          ) : (
+            <>
+              <span className="text-4xl sm:text-5xl font-extrabold tracking-tighter font-mono text-slate-900 dark:text-white">
+                {formattedTime}
+              </span>
+              <span className="text-xs font-semibold tracking-wider uppercase mt-1 text-slate-500 dark:text-slate-400">
+                {phase === 'PREPARING' ? 'Get Ready' : 'Speak Now'}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Pulsing Live Recording Status Indicator */}
+      {/* Pulsing Live Recording / Listening Status Indicator */}
       <div className="mt-5 flex items-center gap-2">
         {phase === 'SPEAKING' ? (
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 text-xs font-semibold shadow-sm animate-pulse">
@@ -84,6 +97,11 @@ export default function TimerRing({
             </span>
             <span>Recording Live</span>
             <Mic className="w-3.5 h-3.5" />
+          </div>
+        ) : phase === 'READING_QUESTION' ? (
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-50 dark:bg-violet-950/60 border border-violet-200 dark:border-violet-900/60 text-violet-600 dark:text-violet-400 text-xs font-semibold">
+            <Volume2 className="w-3.5 h-3.5 animate-pulse" />
+            <span>Interviewer Speaking</span>
           </div>
         ) : (
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900/60 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">

@@ -121,17 +121,23 @@ speak ai/
         │   ├── DsaFeedbackPage.jsx # DSA evaluation, key points checklist, & chained follow-ups
         │   ├── CoreFeedbackPage.jsx# 4-part structure evaluation, misconceptions, & Concept Refresher
         │   └── ProgressPage.jsx    # Readiness, DSA Mastery, Core Mastery, & Project Mastery
-        └── services/
-            ├── api.js            # Fetch client with profile injection
-            ├── storage.js        # LocalStorage persistence & deterministic metrics
-            └── useSpeechRecognition.js # Web Speech API continuous recognition hook
+        ├── services/
+        │   ├── api.js            # Fetch client with profile injection
+        │   ├── storage.js        # LocalStorage persistence, voice settings, & deterministic metrics
+        │   ├── useSpeechRecognition.js # Web Speech API continuous recognition hook
+        │   └── useSpeechSynthesis.js   # Browser SpeechSynthesis hook with sentence chunking
+        ├── utils/
+        │   └── speechSummary.js  # TTS text cleaner (Big-O, math), spoken summary builder, & chunker
+        └── tests/
+            └── speechSummary.test.js # Unit tests for speech utilities and chunking
 ```
 
 ### Technology Highlights
 - **Backend**: Python 3.11+, FastAPI, Pydantic v2, `google-genai` official SDK, Uvicorn, HTTPX.
 - **Frontend**: React 19, Vite 6, Tailwind CSS v4, Lucide React icons.
 - **Speech Capture**: Browser Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`).
-- **Data Persistence**: Client-side `localStorage` (transcripts, scores, and metrics only; raw audio is never recorded or stored).
+- **Voice Interviewer**: Browser-native `SpeechSynthesis` API with sentence chunking (<140 chars) to bypass Chrome 15s cutoff bugs.
+- **Data Persistence**: Client-side `localStorage` (transcripts, scores, and metrics only; raw audio is never recorded, saved, or transmitted).
 - **Security & Privacy**: Per-IP sliding-window rate limiting (30 req/min), SSRF domain allowlisting (`api.github.com`), prompt injection defense (`<untrusted_repo_content>`), and input length validation.
 
 ---
@@ -139,13 +145,19 @@ speak ai/
 ## Key Features
 
 1. **Zero Hardcoded Prompts & Universal Candidate Neutrality**: Every topic is generated dynamically by Google Gemini using high-temperature sampling and conditioned on the user's customized profile and recent drill history.
-2. **My Projects Feature & Oral Architecture Drills**:
+2. **Voice Interviewer & Spoken Feedback**:
+   - **Spoken Question Delivery**: The AI interviewer reads the question or follow-up aloud before your 10-second preparation countdown begins across all 4 modes (General, DSA, CS Core, My Projects).
+   - **Strict Preparation Sequencing**: The 10-second mental preparation countdown begins only after question speech ends or if the candidate clicks "Skip Voice & Start Prep", backed by a 16s safety timeout.
+   - **Microphone Conflict Safeguard**: Speech synthesis is unconditionally stopped (`speechSynthesis.cancel()`) before the microphone recording starts. All speech playback buttons are disabled while speaking.
+   - **Spoken Feedback Summary**: Auto-speaks a concise 3-5 sentence coaching summary when evaluation completes, with dedicated buttons to replay or listen to model sample answers.
+   - **Voice Customization**: Candidate settings allow toggling question reading, toggling feedback speech, picking an English voice (`en-IN`, natural, system), adjusting pace (0.8x deliberate, 1.0x normal, 1.2x fast), previewing with "Test Voice", and toggling mute instantly from the Navbar.
+3. **My Projects Feature & Oral Architecture Drills**:
    - **GitHub Repo Analyzer**: Connects any public GitHub repository URL (`https://github.com/owner/repo`). Securely extracts README and top root source files via `api.github.com` (capped to 5 files, 8KB per file).
    - **Manual Project Entry**: Support for closed-source, hackathon, or private projects by describing what was built, challenges faced, and results.
    - **Review & Edit Brief**: Users can inspect and edit the generated brief before saving, with a clear warning: *"Check this summary. Your questions will be based on it."*
    - **9 Architectural Angles**: Questions target "Why you chose this tech", "Architecture decisions", "A hard bug and how you fixed it", "Trade-offs", "Scaling & Performance", "Testing & Reliability", "Teamwork & Collaboration", "What you'd improve", and "Explain a feature end to end" (plus "Surprise Me").
    - **Personal Ownership & Agency Coaching**: Evaluates whether the candidate speaks in the first person (*"I architected/implemented..."* vs vague passive *"we did..."*) and highlights concrete engineering details.
-3. **DSA Interview Mode (Spoken Explanations)**:
+4. **DSA Interview Mode (Spoken Explanations)**:
    - 14 Subtopics (Arrays & Strings, Linked Lists, Stacks & Queues, Hashing, Trees & BST, Graphs, Recursion & Backtracking, Dynamic Programming, Sorting & Searching, Heaps, Greedy, Two Pointers / Sliding Window, Bit Manipulation, Surprise Me).
    - 6 Question Types (Theory/Concept, Explain an Approach, Complexity Analysis, Compare Data Structures, Edge Cases & Pitfalls, "Why did you choose X?", Surprise Me).
    - Evaluates spoken answer structure: **Core Idea ➔ Approach / Logic ➔ Time & Space Complexity ➔ Tricky Edge Cases**.
@@ -153,7 +165,7 @@ speak ai/
    - Detects and flags any factual algorithmic **misconceptions**.
    - Supports up to **3 chained interviewer follow-up rounds** linked by `parent_session_id`.
    - Dedicated **DSA Speaking Mastery** analytics and weakest subtopic detection on the Progress dashboard.
-4. **CS Core Fundamentals Mode**:
+5. **CS Core Fundamentals Mode**:
    - Covers 10 foundational subjects: Operating Systems, DBMS & SQL, Computer Networks, Object-Oriented Programming, Computer Architecture, System Design basics, Web/HTTP & APIs, Security basics, Software Engineering & SDLC, and Git Version Control.
    - **"Teach me first" vs "Test me directly"**: In teach mode, Gemini generates an engaging 150-200 word conceptual primer with real-world analogies before the drill starts.
    - **4-Part Spoken Answer Structure**: Evaluates adherence to **Definition ➔ Mechanism ➔ Example ➔ Trade-off**, showing clear visual checkmarks for covered vs omitted components.
@@ -278,7 +290,28 @@ tests/test_schemas_and_metrics.py::test_excluded_fillers_not_counted PASSED
 tests/test_schemas_and_metrics.py::test_conversational_like_vs_verb_like PASSED
 tests/test_schemas_and_metrics.py::test_gemini_analysis_schema_validation PASSED
 tests/test_schemas_and_metrics.py::test_gemini_analysis_requires_exactly_three_improvements PASSED
-======================== 27 passed in 0.4s ========================
+======================== 39 passed in 0.4s ========================
+```
+
+### Frontend Unit Tests (Speech Utilities & Sentence Chunking)
+The frontend uses Node's native test runner to verify speech sanitization (Big-O translation, bracket stripping), score formatting, and Chrome sentence chunking:
+
+```bash
+cd frontend
+npm test
+```
+
+Expected output:
+```
+✔ formatScoreInWords handles integers and decimals
+✔ cleanTextForSpeech translates Big-O notation
+✔ cleanTextForSpeech strips markdown formatting and brackets
+✔ cleanTextForSpeech handles score fractions
+✔ buildSpokenSummary prioritizes analysis.spoken_summary if available
+✔ buildSpokenSummary builds structured fallback when spoken_summary is missing
+✔ buildSpokenSummary handles missing fields without crashing
+✔ chunkTextForTTS splits text into chunks under maxLen
+ℹ pass 8
 ```
 
 ### Production Build Verification

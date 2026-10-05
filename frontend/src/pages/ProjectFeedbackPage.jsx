@@ -16,6 +16,7 @@ import {
   Volume2,
 } from 'lucide-react';
 import FillerChart from '../components/FillerChart';
+import VoiceFeedbackPlayer from '../components/VoiceFeedbackPlayer';
 
 export default function ProjectFeedbackPage({
   analysis,
@@ -64,6 +65,11 @@ export default function ProjectFeedbackPage({
         <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-snug">
           "{questionData?.question || 'Interview Question'}"
         </h2>
+      </div>
+
+      {/* Voice Interviewer Spoken Feedback */}
+      <div className="mb-6">
+        <VoiceFeedbackPlayer analysis={analysis} mode="project" />
       </div>
 
       {/* Main Grid: Overall Score & Dimensions */}

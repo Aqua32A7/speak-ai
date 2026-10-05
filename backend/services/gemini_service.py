@@ -383,6 +383,7 @@ EVALUATION GUIDELINES:
 4. Better Phrases: Provide 2-3 pairs showing how conversational or hesitant expressions could be phrased more professionally.
 5. Sample Answer: Provide a model 60-second answer in the candidate's authentic voice, wrapping high-impact phrases in [square brackets].
 6. Next Focus Area: Identify the single highest-leverage speaking skill for the candidate to practice next.
+7. Spoken Summary: Provide a 2-4 sentence conversational spoken summary of the feedback for text-to-speech (under 40s). State the score in words (e.g. 'seven out of ten'), mention 1 strength, top 1-2 improvements, and next focus. Plain text only, no markdown or bullets.
 """
 
         config = types.GenerateContentConfig(
@@ -444,6 +445,7 @@ EVALUATION GUIDELINES:
             better_phrases=gemini_result.better_phrases,
             sample_answer=gemini_result.sample_answer,
             next_focus_area=gemini_result.next_focus_area,
+            spoken_summary=getattr(gemini_result, "spoken_summary", None),
             words_per_minute=wpm,
             word_count=word_count,
             duration_seconds=duration_seconds,
@@ -800,6 +802,7 @@ EVALUATION INSTRUCTIONS:
    - 'missed_points': Expected key points that were omitted.
 5. Actionable improvements: EXACTLY 3 specific suggestions.
 6. Sample answer: A realistic, articulate 60-second answer in candidate tone with [bracketed high-impact phrases].
+7. Spoken Summary: A 2-4 sentence conversational spoken summary of the feedback for text-to-speech (under 40s). State the score in words (e.g. 'seven out of ten'), mention 1 strength, top 1-2 improvements, and next focus. Plain text only, no markdown or bullets.
 """
 
         config = types.GenerateContentConfig(
@@ -831,6 +834,7 @@ EVALUATION INSTRUCTIONS:
                     strengths=analysis.strengths,
                     sample_answer=analysis.sample_answer,
                     next_focus_area=analysis.next_focus_area,
+                    spoken_summary=getattr(analysis, "spoken_summary", None),
                     words_per_minute=wpm,
                     word_count=word_count,
                     duration_seconds=request.duration_seconds,
@@ -1097,6 +1101,7 @@ EVALUATION GUIDELINES:
 4. Misconceptions: If the candidate made any factually incorrect statements (e.g. confusing O(N) with O(log N)), gently explain the correction.
 5. Scores: Realistic scores between 0 and 10 for overall_score, concept_correctness, explanation_clarity, structure, complexity_awareness, edge_case_awareness, fluency.
 6. Sample answer: Provide a model 60-second answer in the candidate's authentic voice, wrapping bracketed phrases like [we initialize a two-pointer window].
+7. Spoken Summary: Provide a 2-4 sentence conversational spoken summary of the feedback for text-to-speech (under 40s). State the score in words (e.g. 'seven out of ten'), mention 1 strength, top 1-2 improvements, and next focus. Plain text only, no markdown or bullets.
 """
 
         config = types.GenerateContentConfig(
@@ -1130,6 +1135,7 @@ EVALUATION GUIDELINES:
                     strengths=gemini_dsa.strengths,
                     sample_answer=gemini_dsa.sample_answer,
                     next_focus_area=gemini_dsa.next_focus_area,
+                    spoken_summary=getattr(gemini_dsa, "spoken_summary", None),
                     words_per_minute=wpm,
                     word_count=word_count,
                     duration_seconds=duration_seconds,
@@ -1411,6 +1417,7 @@ EVALUATION DIRECTIVES:
 5. Scores: Realistic scores between 0 and 10 for overall_score, concept_accuracy, explanation_clarity, structure, depth, examples_and_analogies, fluency.
 6. Sample answer: Provide a model 60-second answer in the candidate's authentic voice, wrapping bracketed phrases like [we create a non-clustered B-tree index].
 7. Concept Refresher: Provide a crisp 2-3 sentence 'explanation' and 2-3 'remember_points' bullet points.
+8. Spoken summary: Provide a 3-5 sentence conversational summary (written for text-to-speech audio playback) summarizing the overall score in words, 1 key strength, top 1-2 improvements, and the next focus area. Do not use markdown, emojis, asterisks, brackets, or math notation.
 """
 
         config = types.GenerateContentConfig(
@@ -1445,6 +1452,7 @@ EVALUATION DIRECTIVES:
                     sample_answer=gemini_core.sample_answer,
                     refresher=gemini_core.refresher,
                     next_focus_area=gemini_core.next_focus_area,
+                    spoken_summary=getattr(gemini_core, "spoken_summary", None),
                     words_per_minute=wpm,
                     word_count=word_count,
                     duration_seconds=duration_seconds,

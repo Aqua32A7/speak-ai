@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import ScoreBar from '../components/ScoreBar';
 import FillerChart from '../components/FillerChart';
+import VoiceFeedbackPlayer from '../components/VoiceFeedbackPlayer';
 
 export default function CoreFeedbackPage({
   analysis,
@@ -98,6 +99,9 @@ export default function CoreFeedbackPage({
           </span>
         </div>
       </div>
+
+      {/* Voice Interviewer Spoken Feedback */}
+      <VoiceFeedbackPlayer analysis={analysis} mode="core" />
 
       {/* 2-Column Grid: Core Dimensions & Delivery Hesitations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -84,6 +84,7 @@ export function saveSession(session) {
       ownership_score: session.ownership_score || 0,
       concrete_details_score: session.concrete_details_score || 0,
       ownership_feedback: session.ownership_feedback || '',
+      spoken_summary: session.spoken_summary || null,
     };
 
     const updated = [newSession, ...sessions];
@@ -785,27 +786,54 @@ export function setOnboardingCompleted() {
 // Settings Helpers
 // ============================================================================
 
+export const DEFAULT_SETTINGS = {
+  include_projects_in_random_topics: false,
+  voice_interviewer: true,
+  voice_feedback: true,
+  voice_uri: null,
+  voice_speed: 1.0,
+  voice_muted: false,
+};
+
 export function getSettings() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
     if (!raw) {
-      return { include_projects_in_random_topics: false };
+      return { ...DEFAULT_SETTINGS };
     }
-    return JSON.parse(raw);
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
   } catch (err) {
-    return { include_projects_in_random_topics: false };
+    return { ...DEFAULT_SETTINGS };
   }
 }
 
 export function saveSettings(settings) {
   try {
-    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
-    return settings;
+    const current = getSettings();
+    const merged = { ...current, ...settings };
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(merged));
+    // Dispatch a storage event or custom event so navbar/components can react immediately
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('speakprep_settings_changed', { detail: merged }));
+    }
+    return merged;
   } catch (err) {
     console.error('Failed to save settings:', err);
     return null;
   }
 }
+
+export function isVoiceMuted() {
+  return !!getSettings().voice_muted;
+}
+
+export function toggleVoiceMute() {
+  const current = getSettings();
+  const nextMuted = !current.voice_muted;
+  saveSettings({ voice_muted: nextMuted });
+  return nextMuted;
+}
+
 
 // ============================================================================
 // My Projects Helpers
