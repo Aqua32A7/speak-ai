@@ -121,6 +121,17 @@ async def generic_exception_handler(request: Request, exc: Exception):
     )
 
 
+@app.get("/", tags=["Root"])
+async def root():
+    """Root status endpoint for monitoring and uptime probes."""
+    return {
+        "service": "SpeakPrep AI API",
+        "status": "online",
+        "docs": "/docs",
+        "health": "/api/health",
+    }
+
+
 @app.get("/api/health", response_model=HealthResponse)
 async def get_health():
     """Health check endpoint to verify API and Gemini configuration status."""
