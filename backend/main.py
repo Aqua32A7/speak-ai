@@ -136,7 +136,7 @@ async def root():
 async def get_health():
     """Health check endpoint to verify API and Gemini configuration status."""
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    model = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview").strip()
+    model = gemini_service.get_model_name()
     return HealthResponse(
         status="healthy",
         gemini_configured=bool(api_key and len(api_key) > 5),

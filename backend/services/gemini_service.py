@@ -168,12 +168,102 @@ def calculate_speech_metrics(
 
 
 class GeminiService:
+    FALLBACK_MODELS = [
+        "gemini-flash-lite-latest",
+        "gemini-flash-latest",
+        "gemini-3.8-flash",
+        "gemini-3-flash-preview",
+    ]
+    DEPRECATED_MODELS = {
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-2.5-flash-lite",
+    }
+
     def __init__(self):
         self._client = None
-        self._model = None
+        self._active_model = None
+
+    def _get_candidate_models(self) -> List[str]:
+        candidates = []
+        if self._active_model and self._active_model not in self.DEPRECATED_MODELS:
+            candidates.append(self._active_model)
+
+        env_model = os.environ.get("GEMINI_MODEL", "").strip()
+        if env_model:
+            if env_model in self.DEPRECATED_MODELS:
+                logger.warning(
+                    f"Configured GEMINI_MODEL '{env_model}' is deprecated by Google. "
+                    f"Automatically substituting with resilient models: {self.FALLBACK_MODELS}"
+                )
+            elif env_model not in candidates:
+                candidates.append(env_model)
+
+        for m in self.FALLBACK_MODELS:
+            if m not in candidates:
+                candidates.append(m)
+
+        return candidates
 
     def _get_model_name(self) -> str:
-        return os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview").strip()
+        return self._active_model or self._get_candidate_models()[0]
+
+    def get_model_name(self) -> str:
+        return self._get_model_name()
+
+    def _generate_content_with_fallback(self, client, contents: str, config: Any = None):
+        """
+        Executes client.models.generate_content with automated multi-model fallback.
+        Handles model deprecation (404), temporary spikes (503), and rate limits.
+        """
+        from google.genai import errors
+        models_to_try = self._get_candidate_models()
+        last_error = None
+
+        for model in models_to_try:
+            try:
+                if config is not None:
+                    response = client.models.generate_content(
+                        model=model,
+                        contents=contents,
+                        config=config,
+                    )
+                else:
+                    response = client.models.generate_content(
+                        model=model,
+                        contents=contents,
+                    )
+                if self._active_model != model:
+                    logger.info(f"Active Gemini model set to: {model}")
+                    self._active_model = model
+                return response
+            except errors.APIError as e:
+                err_code = getattr(e, "code", None)
+                err_msg = str(e).lower()
+                # If model is deprecated (404) or temporarily unavailable (503)
+                if err_code in (404, 503) or "no longer available" in err_msg or "not found" in err_msg or "unavailable" in err_msg:
+                    logger.warning(f"Model '{model}' returned {err_code}. Attempting fallback...")
+                    last_error = e
+                    continue
+                # If schema error, let caller handle schema retry
+                if "schema" in err_msg:
+                    raise
+                # If rate limit (429), re-raise immediately
+                if err_code == 429 or "quota" in err_msg:
+                    raise
+                last_error = e
+                logger.warning(f"Model '{model}' error: {e}. Trying fallback model...")
+                continue
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Model '{model}' error: {e}. Trying fallback model...")
+                continue
+
+        if last_error:
+            raise last_error
+        raise RuntimeError("No candidate Gemini models available.")
 
     def _get_client(self):
         api_key = os.environ.get("GEMINI_API_KEY", "").strip()
@@ -291,8 +381,8 @@ REQUIREMENTS:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )
@@ -396,8 +486,8 @@ EVALUATION GUIDELINES:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )
@@ -488,8 +578,8 @@ Keep it concise, realistic, and conversational. Return only the question text.
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                 )
                 text = response.text.strip().strip('"').strip("'")
@@ -616,8 +706,8 @@ Refine these details into a structured ProjectBrief:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )
@@ -717,8 +807,8 @@ RULES:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )
@@ -813,8 +903,8 @@ EVALUATION INSTRUCTIONS:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )
@@ -899,8 +989,8 @@ Keep the question concise, verbal, and realistic. Return only the question strin
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                 )
                 text = response.text.strip().strip('"').strip("'")
@@ -1019,8 +1109,8 @@ REQUIREMENTS:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )
@@ -1112,8 +1202,8 @@ EVALUATION GUIDELINES:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )
@@ -1204,8 +1294,8 @@ Keep the question concise, spoken, and realistic. Return only the question strin
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                 )
                 text = response.text.strip().strip('"').strip("'")
@@ -1326,8 +1416,8 @@ KEY_POINTS REQUIREMENT:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )
@@ -1428,8 +1518,8 @@ EVALUATION DIRECTIVES:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )
@@ -1518,8 +1608,8 @@ Keep the question concise, spoken, and realistic. Return only the question strin
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                 )
                 text = response.text.strip().strip('"').strip("'")
@@ -1612,8 +1702,8 @@ CRITICAL INSTRUCTIONS:
 
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
-                    model=model_name,
+                response = self._generate_content_with_fallback(
+                    client=client,
                     contents=prompt,
                     config=config,
                 )

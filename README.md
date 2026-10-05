@@ -219,7 +219,7 @@ speak ai/
    Edit `backend/.env` with your API key:
    ```env
    GEMINI_API_KEY=AIzaSy...your_gemini_api_key_here
-   GEMINI_MODEL=gemini-2.5-flash
+   GEMINI_MODEL=gemini-flash-lite-latest
    CORS_ORIGINS=http://localhost:5173,http://localhost:4173
    ```
 
